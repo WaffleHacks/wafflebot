@@ -1,11 +1,38 @@
-from pydantic import BaseSettings
+from dotenv import load_dotenv
+from os import environ
+from pydantic import BaseModel
 
-from .types import DatabaseUrl
+from .api import ApiSettings
+from .bot import BotSettings
+from .types import DatabaseUrl, DiscordToken
+
+API_PREFIX = "api_"
+BOT_PREFIX = "bot_"
 
 
-class Settings(BaseSettings):
+class Settings(BaseModel):
+    api: ApiSettings
+    bot: BotSettings
+
     database_url: DatabaseUrl
+    discord_token: DiscordToken
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+
+def load_settings() -> Settings:
+    # Load settings from the environment
+    load_dotenv()
+
+    raw_settings = {"api": {}, "bot": {}}
+    for key, value in environ.items():
+        key = key.lower()
+        if key == "api" or key == "bot":
+            raise ValueError(f"configuration key '{key}' cannot be 'API' or 'BOT'")
+
+        if key.startswith(API_PREFIX):
+            raw_settings["api"][key[4:]] = value
+        elif key.startswith(BOT_PREFIX):
+            raw_settings["bot"][key[4:]] = value
+        else:
+            raw_settings[key] = value
+
+    return Settings(**raw_settings)

@@ -1,3 +1,3 @@
-from .settings import Settings
+from .settings import load_settings
 
-SETTINGS = Settings()
+SETTINGS = load_settings()
