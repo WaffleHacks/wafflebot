@@ -1,11 +1,11 @@
 from datetime import datetime
-from discord import Color, Embed, Member
-from typing import List, Tuple
+from discord import Color, Embed, Member, User
+from typing import List, Tuple, Union
 
 EMBED_COLOR = Color.from_rgb(0, 0, 0)
 
 
-def default(author: Member) -> Embed:
+def default(author: Union[Member, User]) -> Embed:
     """
     Generate an embed in the default format
     :param author: the command issuer
@@ -20,7 +20,9 @@ def default(author: Member) -> Embed:
     return embed
 
 
-def help_(author: Member, name: str, explanations: List[Tuple[str, str]]) -> Embed:
+def help_(
+    author: Union[Member, User], name: str, explanations: List[Tuple[str, str]]
+) -> Embed:
     """
     Generate a help embed for a command group
     :param author: the command issuer
