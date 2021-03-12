@@ -5,7 +5,7 @@ from typing import List, Tuple
 EMBED_COLOR = Color.from_rgb(0, 0, 0)
 
 
-def default_embed(author: Member) -> Embed:
+def default(author: Member) -> Embed:
     """
     Generate an embed in the default format
     :param author: the command issuer
@@ -20,7 +20,7 @@ def default_embed(author: Member) -> Embed:
     return embed
 
 
-def help_embed(author: Member, name: str, explanations: List[Tuple[str, str]]) -> Embed:
+def help_(author: Member, name: str, explanations: List[Tuple[str, str]]) -> Embed:
     """
     Generate a help embed for a command group
     :param author: the command issuer
@@ -29,7 +29,7 @@ def help_embed(author: Member, name: str, explanations: List[Tuple[str, str]]) -
     :return: a help embed
     """
     # Set the constants
-    embed = default_embed(author)
+    embed = default(author)
     embed.description = "`<>` - required argument\n`[]` - optional argument"
     embed.title = f"{name.capitalize()} Help"
 

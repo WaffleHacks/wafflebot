@@ -12,8 +12,7 @@ from discord.ext.commands import (
 import re
 from typing import get_type_hints
 
-from . import logger
-from .embeds import default_embed
+from . import logger, embeds
 
 
 async def on_error(ctx: Context, exception: Exception):
@@ -55,7 +54,7 @@ class Help(HelpCommand):
         bot = ctx.bot  # type: Bot
 
         # Create the base embed
-        embed = default_embed(ctx.author)
+        embed = embeds.default(ctx.author)
         embed.title = "WaffleBot Help"
         embed.description = "All available commands:"
 
@@ -88,7 +87,7 @@ class Help(HelpCommand):
         bot = ctx.bot  # type: Bot
 
         # Create the base embed
-        embed = default_embed(ctx.author)
+        embed = embeds.default(ctx.author)
         embed.title = f"`{bot.command_prefix}{command.qualified_name}` Help"
         embed.description = "`<>` - required argument\n`[]` - optional argument"
 
