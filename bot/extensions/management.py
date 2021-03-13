@@ -6,6 +6,7 @@ from discord.ext.commands import (
     ExtensionNotFound,
     ExtensionNotLoaded,
     group,
+    is_owner,
     NoEntryPointError,
 )
 
@@ -18,6 +19,7 @@ logger = get_logger("extensions.management")
 
 
 @group()
+@is_owner()
 async def management(ctx: Context):
     """
     Extensions management group
@@ -27,7 +29,7 @@ async def management(ctx: Context):
         await ctx.channel.send(
             embed=embeds.help_(
                 ctx.author,
-                "extensions",
+                "management",
                 [
                     (".management enable <package>", "enable an extension"),
                     (
