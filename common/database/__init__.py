@@ -1,3 +1,3 @@
 from .db import db as database
-from .models import Category, Message, Setting, Ticket, User
+from .models import CannedResponse, Category, Message, Setting, Ticket, User
 from .tables import SettingsKey

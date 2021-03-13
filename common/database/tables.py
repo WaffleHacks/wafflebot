@@ -76,3 +76,16 @@ settings = sqlalchemy.Table(
     sqlalchemy.Column("key", sqlalchemy.Enum(SettingsKey), nullable=False, index=True),
     sqlalchemy.Column("value", sqlalchemy.Text, nullable=False),
 )
+
+# Canned responses table
+canned_responses = sqlalchemy.Table(
+    "canned_responses",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, index=True),
+    sqlalchemy.Column(
+        "key", sqlalchemy.String(32), nullable=False, index=True, unique=True
+    ),
+    sqlalchemy.Column("title", sqlalchemy.String(256), nullable=False),
+    sqlalchemy.Column("content", sqlalchemy.Text, nullable=False),
+    sqlalchemy.Column("fields", sqlalchemy.Text, nullable=False),
+)

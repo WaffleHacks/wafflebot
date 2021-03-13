@@ -1,3 +1,4 @@
+from .canned_response import CannedResponse
 from .category import Category
 from .message import Message
 from .setting import Setting

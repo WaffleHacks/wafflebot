@@ -16,7 +16,7 @@ logger.initialize()
 
 # Initialize the bot
 intents = Intents(guilds=True, members=True, messages=True, reactions=True)
-bot = Bot(command_prefix=".", intents=intents, help_command=commands.Help())
+bot = Bot(command_prefix="-", intents=intents, help_command=commands.Help())
 bot.on_command_error = commands.on_error
 
 
