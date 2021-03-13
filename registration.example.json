@@ -1,0 +1,15 @@
+{
+  "service1": {
+    "url": "https://service1.website.app/some/path",
+    "token": "some-secure-token",
+    "fields": ["field1", "field2", "field3"],
+    "format": "json"
+  },
+  "service2": {
+    "url": "https://service2.website.app/another/path",
+    "token": "another-secure-token",
+    "pre-message": "message before prompting",
+    "fields": ["field4"],
+    "format": "data"
+  }
+}

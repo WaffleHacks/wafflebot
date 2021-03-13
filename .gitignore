@@ -244,3 +244,6 @@ dmypy.json
 db.sqlite*
 database.sqlite*
 *.db
+
+# Registration module configuration
+registration.json
