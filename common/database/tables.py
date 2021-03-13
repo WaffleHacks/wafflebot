@@ -1,4 +1,13 @@
+from enum import Enum
 import sqlalchemy
+
+
+# Possible keys for the settings
+class SettingsKey(Enum):
+    ManagementRole = 1
+    PanelAccessRole = 2
+    MentionRole = 3
+
 
 # Enable auto-generation of migrations
 metadata = sqlalchemy.MetaData()
@@ -12,6 +21,15 @@ users = sqlalchemy.Table(
     sqlalchemy.Column("username", sqlalchemy.String(37), nullable=False),
     sqlalchemy.Column("avatar", sqlalchemy.Text, nullable=False),
     sqlalchemy.Column("has_panel", sqlalchemy.Boolean, default=False, nullable=False),
+)
+
+# Settings table
+settings = sqlalchemy.Table(
+    "settings",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, index=True),
+    sqlalchemy.Column("key", sqlalchemy.Enum(SettingsKey), nullable=False),
+    sqlalchemy.Column("value", sqlalchemy.Text, nullable=False),
 )
 
 # Categories table
