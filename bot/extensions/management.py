@@ -126,7 +126,8 @@ async def list_extensions(ctx: Context):
         except AttributeError:
             description = "no description provided"
 
-        embed.add_field(name=f"`{extension}`", value=description)
+        name = extension[extension.rfind(".") + 1 :]
+        embed.add_field(name=f"`{name}`", value=description)
 
     await ctx.channel.send(embed=embed)
 
