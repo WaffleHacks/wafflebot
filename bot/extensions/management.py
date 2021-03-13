@@ -79,6 +79,7 @@ async def reload_extension(ctx: Context, package: str):
     import_name = f"bot.extensions.{package}"
     try:
         ctx.bot.reload_extension(import_name)
+        await ctx.channel.send(f"Reloaded extension `{package}`!")
     except ExtensionNotFound:
         logger.error(f"extension '{package}' could not be found")
         await ctx.channel.send(
