@@ -23,15 +23,6 @@ users = sqlalchemy.Table(
     sqlalchemy.Column("has_panel", sqlalchemy.Boolean, default=False, nullable=False),
 )
 
-# Settings table
-settings = sqlalchemy.Table(
-    "settings",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, index=True),
-    sqlalchemy.Column("key", sqlalchemy.Enum(SettingsKey), nullable=False),
-    sqlalchemy.Column("value", sqlalchemy.Text, nullable=False),
-)
-
 # Categories table
 categories = sqlalchemy.Table(
     "categories",
@@ -75,4 +66,13 @@ messages = sqlalchemy.Table(
     sqlalchemy.Column("sender_id", sqlalchemy.ForeignKey("users.id"), nullable=False),
     sqlalchemy.Column("is_reaction", sqlalchemy.Boolean, nullable=False),
     sqlalchemy.Column("content", sqlalchemy.Text, nullable=False),
+)
+
+# Settings table
+settings = sqlalchemy.Table(
+    "settings",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, index=True),
+    sqlalchemy.Column("key", sqlalchemy.Enum(SettingsKey), nullable=False, index=True),
+    sqlalchemy.Column("value", sqlalchemy.Text, nullable=False),
 )
