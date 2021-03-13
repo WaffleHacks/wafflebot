@@ -60,7 +60,7 @@ class Help(HelpCommand):
 
         # Split the commands into left and right columns
         filtered = await self.filter_commands(bot.commands, sort=True)
-        partition = len(filtered) // 2 + 1
+        partition = len(filtered) // 2 + 1 if len(filtered) != 2 else 1
         left = filtered[:partition]
         right = filtered[partition:]
 
