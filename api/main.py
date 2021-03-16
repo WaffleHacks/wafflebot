@@ -1,23 +1,23 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import UJSONResponse
-from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from common import SETTINGS
 from common.database import database
 from .authentication import router as authentication_router
+from .static import router as static_router
 
 app = FastAPI()
 
 # Register middleware
 app.add_middleware(SessionMiddleware, secret_key=SETTINGS.api.secret_key)
 
-# Mount apps and sub-apps
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Register sub-routers
 app.include_router(
     authentication_router, prefix="/authentication", tags=["authentication"]
 )
+app.include_router(static_router, tags=["static"])
 
 
 @app.on_event("startup")
