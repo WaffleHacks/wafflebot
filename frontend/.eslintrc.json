@@ -1,0 +1,43 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true,
+        "node": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "prettier"
+    ],
+    "plugins": ["svelte3", "prettier"],
+    "parserOptions": {
+        "ecmaVersion": 12,
+        "sourceType": "module"
+    },
+    "ignorePatterns": [
+        "public/static/"
+    ],
+    "overrides": [
+        {
+            "files": ["**/*.svelte"],
+            "processor": "svelte3/svelte3",
+            "rules": {
+                "prettier/prettier": "off"
+            }
+        }
+    ],
+    "rules": {
+        "prettier/prettier": ["error"],
+        "indent": [
+            "error",
+            2
+        ],
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "semi": [
+            "error",
+            "always"
+        ]
+    }
+}
