@@ -16,7 +16,9 @@
 	</Router>
 </main>
 
-<style>
+<style lang="scss" global>
+	@import "./main";
+
 	main {
 		text-align: center;
 		padding: 1em;
