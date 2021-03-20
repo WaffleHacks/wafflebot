@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, HTTPException, Query, Request
+from starlette.responses import RedirectResponse, URL
+from typing import Dict, Optional, Union
 
 from .models import UserInfo
 from .oauth import get_discord_client
@@ -17,7 +18,11 @@ async def login(request: Request):
 
 
 @router.get("/callback")
-async def callback(request: Request, code: str = None):
+async def callback(
+    request: Request,
+    code: str = None,
+    error: Optional[str] = Query(None),
+):
     """
     Complete the OAuth2 login flow
     """
@@ -27,8 +32,7 @@ async def callback(request: Request, code: str = None):
     if code:
         token = await client.authorize_access_token(request)
     else:
-        # TODO: redirect to Svelte
-        return {"status": "failed"}
+        return RedirectResponse(URL("/login").include_query_params(error=error))
 
     # Get the user's info
     client.token = token
@@ -39,8 +43,7 @@ async def callback(request: Request, code: str = None):
     request.session["user"] = dict(user_info)
     request.session["token"] = dict(token)
 
-    # TODO: redirect to Svelte
-    return RedirectResponse("/")
+    return RedirectResponse("/login/complete")
 
 
 @router.get("/logout")
@@ -65,4 +68,9 @@ async def me(request: Request):
     if not request.session.get("logged_in"):
         raise HTTPException(status_code=401, detail="unauthorized")
 
-    return request.session.get("user")
+    # Compile the user's information
+    user = request.session.get("user")
+    token = request.session.get("token")  # type: Dict[str, Union[str, int]]
+    user["expiration"] = token.get("expires_at")
+
+    return user

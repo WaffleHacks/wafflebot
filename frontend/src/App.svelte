@@ -1,16 +1,28 @@
 <script>
-	import Router from "./router/Router.svelte";
-	import NotFound from "./router/NotFound.svelte";
+	import { Router, Route, NotFound, redirect } from "./router";
+	import { Login, LoginComplete } from "./pages/login";
+	import { isAuthenticated } from "./stores";
 
-	export let name;
+	// Ensure the user is logged in for all routes
+	const isLoggedIn = (ctx, next) => {
+	  if ($isAuthenticated) next();
+	  else redirect("/login");
+	};
 </script>
 
 <main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
-
 	<Router>
+		<Route middleware={[isLoggedIn]}>
+			<h2>Home Page</h2>
+		</Route>
+
+		<!-- Authentication routes -->
+		<Route path="/login" component={Login}/>
+		<Route path="/login/complete" component={LoginComplete}/>
+
+		<!-- Catch all -->
 		<NotFound>
+			<!-- TODO: add proper page not found -->
 			<h2>Page not found</h2>
 		</NotFound>
 	</Router>
@@ -18,24 +30,4 @@
 
 <style lang="scss" global>
 	@import "./main";
-
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
-
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
-	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
 </style>

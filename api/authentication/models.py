@@ -11,3 +11,4 @@ class UserInfo(BaseModel):
     email: str
     email_verified: bool
     picture: str
+    expiration: int
