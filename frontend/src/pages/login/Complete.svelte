@@ -8,30 +8,18 @@
   import { onMount } from "svelte";
   import { User } from "../../api";
   import { redirect } from "../../router";
-  import { isAuthenticated, user } from "../../stores";
+  import { user } from "../../stores";
 
-  onMount(() => {
-    const controller = new AbortController();
+  onMount(async function() {
+    const content = await User.info();
 
-    (async function () {
-      try {
-        // Fetch the user's profile
-        const content = await User.info(controller.signal);
-
-        // Save their info
-        isAuthenticated.set(true);
-        user.set(content.data);
-      } catch (e) {
-        // Mark the user as logged out
-        isAuthenticated.set(false);
-        user.set({});
-      }
-
-      // Go to the home page
+    // Set the user's profile
+    if (content.success) {
+      user.set(content.data);
       redirect("/");
-    })();
 
-    return () => controller.abort();
+    // Redirect back to login if it failed for some reason
+    } else redirect("/login");
   });
 </script>
 
