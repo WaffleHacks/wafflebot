@@ -24,8 +24,8 @@
 		</Route>
 
 		<!-- Authentication routes -->
-		<Route path="/login" component={Login}/>
-		<Route path="/login/complete" component={LoginComplete}/>
+		<Route path="/login" component={Login} layout={false}/>
+		<Route path="/login/complete" component={LoginComplete} layout={false}/>
 
 		<!-- Catch all -->
 		<NotFound>

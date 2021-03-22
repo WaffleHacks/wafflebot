@@ -1,7 +1,9 @@
 <script>
   import { register, activeRoute } from "./Router.svelte";
+  import Layout from "../components/Layout.svelte";
 
   // Define props
+  export let layout = true;
   export let path = "/";
   export let component = null;
   export let middleware = [];
@@ -16,10 +18,19 @@
 </script>
 
 {#if $activeRoute.path === path}
-  <!-- Prefer props over slots -->
-  {#if $activeRoute.component}
-    <svelte:component this={$activeRoute.component} {...$$restProps} {...params} />
+  {#if layout}
+    <Layout>
+      {#if $activeRoute.component}
+        <svelte:component this={$activeRoute.component} {...$$restProps} {...params} />
+      {:else}
+        <slot {params} />
+      {/if}
+    </Layout>
   {:else}
-    <slot {params} />
+    {#if $activeRoute.component}
+      <svelte:component this={$activeRoute.component} {...$$restProps} {...params} />
+    {:else}
+      <slot {params} />
+    {/if}
   {/if}
 {/if}
