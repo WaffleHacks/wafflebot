@@ -269,7 +269,7 @@ class Queryable(object):
         # Execute the insert and set the primary key value (if not provided)
         pk = await self.database.execute(expression)
         if pk is not None:
-            instance.pk = pk
+            instance.set_pk(pk)
 
         return instance
 
@@ -295,8 +295,8 @@ class Model(BaseModel, ABC):
     def pk(self):
         return getattr(self, self.__primary_key__.name)
 
-    @pk.setter
-    def pk(self, value):
+    # @pk.setter will not work. See github.com/samuelcolvin/pydantic/issues/1577
+    def set_pk(self, value):
         setattr(self, self.__primary_key__.name, value)
 
     async def update(self, **kwargs):
