@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, Request
-from starlette.responses import RedirectResponse, URL
-from typing import Dict, Optional, Union
+from starlette.responses import RedirectResponse, Response, URL
+from typing import Dict, Optional
 
 from ..utils.session import get_session, is_logged_in, Session
 from .models import UserInfo
@@ -47,7 +47,7 @@ async def callback(
     return RedirectResponse("/login/complete")
 
 
-@router.get("/logout")
+@router.get("/logout", status_code=204)
 async def logout(session=Depends(get_session)):
     """
     Logout out a user
@@ -57,7 +57,7 @@ async def logout(session=Depends(get_session)):
     session.pop("token", None)
     session["logged_in"] = False
 
-    return {"success": True}
+    return Response(status_code=204)
 
 
 @router.get("/me", response_model=UserInfo)

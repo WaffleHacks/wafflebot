@@ -13,10 +13,8 @@ export class User {
 
   /**
    * Logout the user
-   * @returns {Promise<{success: boolean}>}
    */
   static async logout(signal = undefined) {
-    const response = await fetch("/authentication/logout", { signal });
-    return await response.json();
+    await fetch("/authentication/logout", { signal });
   }
 }
