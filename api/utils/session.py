@@ -61,7 +61,7 @@ class Session(object):
         value = Session.__traverse(self.key_parts[:], session)
 
         # Raise an error if required
-        if self.required:
+        if self.required and value is None:
             raise HTTPException(
                 status_code=400, detail=f"missing cookie parameter '{self.key}'"
             )
