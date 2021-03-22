@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from starlette.responses import RedirectResponse, URL
 from typing import Dict, Optional, Union
 
+from ..utils.session import get_session, is_logged_in, Session
 from .models import UserInfo
 from .oauth import get_discord_client
 
@@ -47,30 +48,26 @@ async def callback(
 
 
 @router.get("/logout")
-async def logout(request: Request):
+async def logout(session=Depends(get_session)):
     """
     Logout out a user
     """
     # Remove everything from their session
-    request.session.pop("user", None)
-    request.session.pop("token", None)
-    request.session["logged_in"] = False
+    session.pop("user", None)
+    session.pop("token", None)
+    session["logged_in"] = False
 
     return {"success": True}
 
 
 @router.get("/me", response_model=UserInfo)
-async def me(request: Request):
+async def me(
+    _=Depends(is_logged_in),
+    user: Dict = Depends(Session("user")),
+    expiration: int = Depends(Session("token.expires_at")),
+):
     """
     Retrieve the currently logged in user's profile
     """
-    # Ensure the user is logged in
-    if not request.session.get("logged_in"):
-        raise HTTPException(status_code=401, detail="unauthorized")
-
-    # Compile the user's information
-    user = request.session.get("user")
-    token = request.session.get("token")  # type: Dict[str, Union[str, int]]
-    user["expiration"] = token.get("expires_at")
-
+    user["expiration"] = expiration
     return user
