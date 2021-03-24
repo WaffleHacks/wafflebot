@@ -1,4 +1,4 @@
-from pydantic import AnyUrl, PostgresDsn
+from pydantic import AnyUrl
 import re
 from typing import Union
 
@@ -45,8 +45,8 @@ class DiscordClientSecret(str):
         return v
 
 
-class SqliteDsn(AnyUrl):
-    allowed_schemes = {"sqlite", "sqlite3"}
+class PostgresDsn(AnyUrl):
+    allowed_schemes = {"postgresql+asyncpg"}
 
 
-DatabaseUrl = Union[PostgresDsn, SqliteDsn]
+DatabaseUrl = Union[PostgresDsn]

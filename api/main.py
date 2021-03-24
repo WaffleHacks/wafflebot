@@ -4,7 +4,6 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from common import SETTINGS
-from common.database import database
 from .authentication import router as authentication_router
 from .canned_responses import router as canned_responses_router
 from .static import router as static_router
@@ -26,16 +25,6 @@ app.include_router(
     dependencies=[Depends(is_logged_in)],
 )
 app.include_router(static_router, tags=["static"])
-
-
-@app.on_event("startup")
-async def startup():
-    await database.connect()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
 
 
 @app.exception_handler(StarletteHTTPException)

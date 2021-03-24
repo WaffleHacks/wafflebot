@@ -5,7 +5,7 @@ from os import environ
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
-from common.database.tables import metadata
+from common.database.tables.base import Base
 
 # Load from environment file
 load_dotenv()
@@ -20,7 +20,7 @@ fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-target_metadata = metadata
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
