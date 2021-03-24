@@ -38,15 +38,6 @@ async def create(response: CannedResponseIn, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=409, detail="field 'key' must be unique")
 
 
-@router.get("/{primary_key}", response_model=CannedResponseModel)
-async def get(primary_key: int, db: AsyncSession = Depends(get_db)):
-    response = await db.get(CannedResponse, primary_key)
-    if response is None:
-        raise HTTPException(status_code=404, detail="not found")
-
-    return response
-
-
 @router.put("/{primary_key}", response_model=CannedResponseModel)
 async def update(
     primary_key: int, fields: CannedResponseUpdate, db: AsyncSession = Depends(get_db)
