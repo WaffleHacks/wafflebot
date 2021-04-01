@@ -57,6 +57,11 @@
   resolved "https://registry.npmjs.org/@polka/url/-/url-1.0.0-next.11.tgz"
   integrity sha512-3NsZsJIA/22P3QUyrEDNA2D133H4j224twJrdipXN38dpnIOzAbUDtOwkcJ5pXmn75w7LSQDjA4tO9dm1XlqlA==
 
+"@popperjs/core@^2.9.1":
+  version "2.9.1"
+  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.9.1.tgz#7f554e7368c9ab679a11f4a042ca17149d70cf12"
+  integrity sha512-DvJbbn3dUgMxDnJLH+RZQPnXak1h4ZVYQ7CWiFWjQwBFkVajT4rfw2PdpHLTSTwxrYfnoEXkuBiwkDm6tPMQeA==
+
 "@rollup/plugin-commonjs@^17.0.0":
   version "17.1.0"
   resolved "https://registry.npmjs.org/@rollup/plugin-commonjs/-/plugin-commonjs-17.1.0.tgz"
@@ -3420,6 +3425,11 @@ verror@1.10.0:
     assert-plus "^1.0.0"
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
+
+vest@^3.1.2:
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/vest/-/vest-3.1.2.tgz#674f2b43e37029cbed9a3b67fa545a1c77be6703"
+  integrity sha512-mdiTu28Gl1vrZpLwiNhXzIkfWmuwIfNUsMEXX0sSSk0bSLbAqV7bFIFI9g7jnZYn9AVGXrljFlLmKvMl5BJYpA==
 
 which-boxed-primitive@^1.0.1:
   version "1.0.2"

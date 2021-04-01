@@ -49,10 +49,8 @@
   import page from "page";
   import { icons } from "feather-icons";
   import { User } from "../api";
+  import { SVG_ATTRS } from "../constants";
   import { activeRoute } from "../router/Router.svelte";
-
-  // Constant width and height for each SVG icon
-  const SVG_ATTRS = { width: 16, height: 16 };
 
   // The sidebar navigation items
   const NAVIGATION = [
@@ -63,6 +61,11 @@
           icon: "home",
           name: "Home",
           to: "/",
+        },
+        {
+          icon: "mail",
+          name: "Canned Responses",
+          to: "/canned-responses",
         }
       ],
     },

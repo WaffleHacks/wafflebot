@@ -1,9 +1,11 @@
 <script>
 	import { onMount } from "svelte";
 	import { User } from "./api";
-	import { Login, LoginComplete } from "./pages/login";
 	import { Router, Route, NotFound, redirect } from "./router";
 	import { user } from "./stores";
+
+	import CannedResponses from "./pages/CannedResponses.svelte";
+	import { Login, LoginComplete } from "./pages/login";
 
 	// Check that the user is logged in
 	onMount(async function() {
@@ -22,6 +24,8 @@
 			<h2>Home Page</h2>
 			<a href="/testing">Link</a>
 		</Route>
+
+		<Route path="/canned-responses" component={CannedResponses}/>
 
 		<!-- Authentication routes -->
 		<Route path="/login" component={Login} layout={false}/>
