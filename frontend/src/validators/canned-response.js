@@ -1,8 +1,6 @@
 import vest, { test, enforce } from "vest";
 
 const suite = vest.create("CannedResponse", (form = {}, currentField) => {
-  console.log(form);
-
   // If the field name is provided, only validate that field
   vest.only(currentField);
 
@@ -25,8 +23,8 @@ const suite = vest.create("CannedResponse", (form = {}, currentField) => {
     () =>
       enforce(form.fields).isArrayOf(
         enforce.shape({
-          name: enforce.isString().isNotEmpty().lessThanOrEquals(256),
-          value: enforce.isString().isNotEmpty().lessThanOrEquals(1024),
+          name: enforce.isString().isNotEmpty().shorterThanOrEquals(256),
+          value: enforce.isString().isNotEmpty().shorterThanOrEquals(1024),
         }),
       ),
   );

@@ -80,9 +80,6 @@
     editResult = validate(editModal, name);
     editErrors = editResult.getErrors();
   };
-
-  $: console.log(editErrors);
-  $: console.log(createErrors);
 </script>
 
 <h2 class="mt-3">Canned Responses</h2>
