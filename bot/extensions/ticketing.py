@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 from discord import utils, TextChannel, Member, PermissionOverwrite
-from discord.ext.commands import Bot, Cog, command, Context
+from discord.ext.commands import check, command, Bot, Cog, Context
 from sqlalchemy.exc import IntegrityError
 from typing import Optional
 
@@ -43,6 +43,33 @@ async def close_ticket(ticket_id: int, channel: TextChannel, wait: int):
     await channel.delete()
 
 
+def in_ticket():
+    """
+    Require that the command is executed within the context of a ticket
+    """
+
+    async def predicate(ctx: Context):
+        # Check that the channel is a ticket
+        # TODO: get category(s) from database
+        if ctx.channel.category.name != "Tickets":
+            return False
+
+        # Check that the channel has the proper name format
+        # TODO: the ticket id in the database should probably correspond to the channel id in Discord
+        try:
+            parts = ctx.channel.name.split("-")
+            if len(parts) != 2:
+                return False
+
+            int(parts[1])
+        except ValueError:
+            return False
+
+        return True
+
+    return check(predicate)
+
+
 class Ticketing(Cog):
     def __init__(self, bot: Bot):
         self.logger = get_logger("extensions.ticketing")
@@ -64,27 +91,15 @@ class Ticketing(Cog):
 
     @command()
     @has_role(SettingsKey.MentionRole)
+    @in_ticket()
     async def close(self, ctx: Context, *, at: Optional[DateTimeConverter]):
         """
         Close the current ticket. Can be delayed with the `at` argument, defaults to now.
         :param ctx: the command context
         :param at: when to close the ticket
         """
-        # Check that the channel is a ticket
-        # TODO: get category(s) from database
-        if ctx.channel.category.name != "Tickets":
-            return
-
         # Retrieve the ticket id from the channel name
-        # TODO: the ticket id in the database should probably correspond to the channel id in Discord
-        try:
-            parts = ctx.channel.name.split("-")
-            if len(parts) != 2:
-                return
-
-            ticket_id = int(parts[1])
-        except ValueError:
-            return
+        ticket_id = int(ctx.channel.name.split("-")[1])
 
         # Close the ticket
         if at is None:
