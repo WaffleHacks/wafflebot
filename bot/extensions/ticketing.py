@@ -220,6 +220,7 @@ class Ticketing(Cog):
         await ticket_channel.send(embed=embed)
 
     @command()
+    @has_role(SettingsKey.PanelAccessRole)
     async def panel(self, ctx: Context):
         """
         Get a link to the panel
