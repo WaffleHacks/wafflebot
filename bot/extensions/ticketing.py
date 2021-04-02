@@ -1,7 +1,9 @@
 from datetime import datetime
-from discord import Member
+from discord import utils, Embed, Member, PermissionOverwrite, RawReactionActionEvent
 from discord.ext.commands import Bot, Cog, command, Context
+from sqlalchemy.exc import IntegrityError
 
+from common.database import get_db, Ticket, User
 from ..converters import DateTimeConverter
 from ..logger import get as get_logger
 
@@ -48,7 +50,81 @@ class Ticketing(Cog):
         :param ctx: the command context
         :param reason: an optional reason for why
         """
-        pass
+        # Get the channel category
+        # TODO: parameterize ticket category (discord side)
+        category = utils.get(ctx.guild.categories, name="Tickets")
+        if category is None:
+            await ctx.channel.send("Could not create ticket, category does not exist!")
+
+        async with get_db() as db:
+            # Ensure the user exists in the database
+            user = User(
+                id=ctx.author.id,
+                username=f"{ctx.author.name}#{ctx.author.discriminator}",
+                avatar=str(ctx.author.avatar_url),
+                has_panel=True,
+            )
+            db.add(user)
+
+            # Save the user, ignoring any users that already exist
+            try:
+                await db.commit()
+            except IntegrityError:
+                pass
+
+        async with get_db() as db:
+            # Create a ticket in the database
+            ticket = Ticket(
+                # TODO: get the category for the ticket (api side)
+                category_id=2,
+                creator_id=user.id,
+                is_open=True,
+                reason=reason,
+            )
+            db.add(ticket)
+
+            # Save the ticket
+            await db.commit()
+
+        # Get the role(s) that can view tickets
+        # TODO: parameterize viewable authorized
+        authorized = [
+            utils.get(ctx.guild.roles, name="Mentor"),
+            # utils.get(ctx.guild.roles, name="Organizer"),
+            ctx.author,
+        ]
+
+        # Create text channel within category
+        permissions = PermissionOverwrite(
+            read_messages=True,
+            read_message_history=True,
+            send_messages=True,
+            add_reactions=True,
+        )
+        overwrites = {role: permissions for role in authorized}
+        overwrites[ctx.guild.default_role] = PermissionOverwrite(view_channel=False)
+        ticket_channel = await category.create_text_channel(
+            f"ticket-{ticket.id}", overwrites=overwrites
+        )
+
+        # Notify of successful creation
+        await ctx.channel.send(
+            embed=Embed(
+                description=f":white_check_mark: Thanks for creating ticket: {ticket_channel.mention}"
+            )
+        )
+
+        # Ping the people for the ticket and instantly delete the message
+        ping_message = " ".join(
+            [entity.mention for entity in authorized if entity is not None]
+        )
+        ping = await ticket_channel.send(ping_message)
+        await ping.delete()
+
+        # Create the "welcome" embed
+        # TODO: get embed content from DB
+        embed = Embed(title="New Ticket")
+        await ticket_channel.send(embed=embed)
 
     @command()
     async def panel(self, ctx: Context):
