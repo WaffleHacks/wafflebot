@@ -37,7 +37,7 @@ oauth.register(
     userinfo_compliance_fix=normalize_userinfo,
     client_kwargs={
         "token_endpoint_auth_method": "client_secret_post",
-        "scope": "identify email guilds",
+        "scope": "identify guilds",
     },
 )
 

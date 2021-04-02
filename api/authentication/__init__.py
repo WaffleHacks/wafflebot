@@ -50,7 +50,6 @@ async def callback(
     # Save the user's info to the database
     user = User(
         id=int(user_info["id"]),
-        email=user_info["email"],
         username=user_info["username"],
         avatar=user_info["picture"],
         has_panel=has_panel,
