@@ -41,10 +41,10 @@ class Ticketing(Cog):
         """
         pass
 
-    @command()
+    @command(aliases=["ticket"])
     async def open(self, ctx: Context, reason: str = ""):
         """
-        Open a new ticket
+        Open a new ticket with an optional reason
         :param ctx: the command context
         :param reason: an optional reason for why
         """
