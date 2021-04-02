@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import Optional
 
 from common.database import get_db, SettingsKey, Ticket, User
+from .. import embeds
 from ..converters import DateTimeConverter
 from ..logger import get as get_logger
 from ..permissions import has_role
@@ -189,7 +190,12 @@ class Ticketing(Cog):
         Get a link to the panel
         :param ctx: the command context
         """
-        pass
+        embed = embeds.default(ctx.author)
+        embed.title = "Panel"
+        embed.description = (
+            "Here's the link to the [panel](https://bot.wafflehacks.tech/)"
+        )
+        await ctx.channel.send(embed=embed)
 
     @command()
     async def remove(self, ctx: Context, user: Member):
