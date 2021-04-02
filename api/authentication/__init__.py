@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse, Response, URL
 from typing import Dict, Optional
 
-from ..utils.session import get_session, is_logged_in, Session
+from common.database import User
 from .models import UserInfo
 from .oauth import get_discord_client
+from ..utils.database import get_db
+from ..utils.session import get_session, is_logged_in, Session
 
 router = APIRouter()
 
@@ -23,6 +27,7 @@ async def callback(
     request: Request,
     code: str = None,
     error: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Complete the OAuth2 login flow
@@ -38,6 +43,26 @@ async def callback(
     # Get the user's info
     client.token = token
     user_info = await client.userinfo(token=token)
+
+    # Determine if the user has panel
+    # TODO: implement roles API call
+    has_panel = True
+
+    # Save the user's info to the database
+    user = User(
+        id=int(user_info["id"]),
+        email=user_info["email"],
+        username=user_info["username"],
+        avatar=user_info["picture"],
+        has_panel=has_panel,
+    )
+
+    # Insert and ignore failures
+    try:
+        db.add(user)
+        await db.commit()
+    except IntegrityError:
+        pass
 
     # Store the info in the session
     request.session["logged_in"] = True
