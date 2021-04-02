@@ -2,6 +2,7 @@ from discord.ext.commands import (
     Bot,
     CheckFailure,
     Command,
+    CommandError,
     CommandNotFound,
     Context,
     Group,
@@ -10,7 +11,7 @@ from discord.ext.commands import (
     MissingRequiredArgument,
 )
 import re
-from typing import get_type_hints
+from typing import get_type_hints, Dict, List, Tuple
 
 from . import logger, embeds
 
@@ -59,7 +60,7 @@ class Help(HelpCommand):
         embed.description = "All available commands:"
 
         # Split the commands into left and right columns
-        filtered = await self.filter_commands(bot.commands, sort=True)
+        filtered = await self.filter_all_commands(bot.all_commands)
         partition = len(filtered) // 2 + 1 if len(filtered) != 2 else 1
         left = filtered[:partition]
         right = filtered[partition:]
@@ -68,8 +69,8 @@ class Help(HelpCommand):
         for side in [left, right]:
             text = ""
 
-            for command in side:
-                text += f"`{bot.command_prefix}{command.qualified_name}`\n"
+            for name, command in side:
+                text += f"`{bot.command_prefix}{name}`\n"
 
             embed.add_field(name="\u200b", value=text.strip("\n"), inline=True)
 
@@ -86,9 +87,15 @@ class Help(HelpCommand):
         ctx = self.context
         bot = ctx.bot  # type: Bot
 
+        # Check if using a command alias
+        requested_command = " ".join(ctx.message.content.split(" ")[1:])
+        name = command.name
+        if requested_command != command.name:
+            name = requested_command
+
         # Create the base embed
         embed = embeds.default(ctx.author)
-        embed.title = f"`{bot.command_prefix}{command.qualified_name}` Help"
+        embed.title = f"`{bot.command_prefix}{name}` Help"
         embed.description = "`<>` - required argument\n`[]` - optional argument"
 
         # Reformat the docstring
@@ -107,7 +114,7 @@ class Help(HelpCommand):
             embed.add_field(name="Description", value=description, inline=False)
 
             # Create the usage information
-            usage = f"`{bot.command_prefix}{command.qualified_name}"
+            usage = f"`{bot.command_prefix}{name}"
             hints = get_type_hints(command.callback)
 
             # Parse the parameters
@@ -128,3 +135,36 @@ class Help(HelpCommand):
 
     async def send_group_help(self, group: Group):
         await group.invoke(self.context)
+
+    async def filter_all_commands(
+        self, commands: Dict[str, Command]
+    ) -> List[Tuple[str, Command]]:
+        """
+        Returns the largest name length of the specified command list, including aliases.
+        :param commands: all the commands to check
+        :return: The maximum width of the commands
+        """
+        # Remove hidden commands
+        iterator = (
+            commands.items()
+            if self.show_hidden
+            else filter(lambda item: not item[1].hidden, commands.items())
+        )
+
+        # Check every command if it can run
+        async def predicate(c: Command):
+            try:
+                return await c.can_run(self.context)
+            except CommandError:
+                return False
+
+        # Check each command
+        ret = []
+        for name, cmd in iterator:
+            valid = await predicate(cmd)
+            if valid:
+                ret.append((name, cmd))
+
+        # Sort the commands by name
+        ret.sort(key=lambda item: item[0])
+        return ret
