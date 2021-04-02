@@ -4,9 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
 
-from common.database import Category
+from common.database import get_db, Category
 from .models.categories import CategoryIn, CategoryResponse, CategoryUpdate
-from ..utils.database import get_db
 
 router = APIRouter()
 

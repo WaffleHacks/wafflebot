@@ -3,7 +3,6 @@ import signal
 import sys
 
 from common import SETTINGS
-from common.database import database
 from . import logger
 from .bot import bot
 
@@ -96,16 +95,8 @@ def main():
     loop = asyncio.get_event_loop()
     logger.get().info("starting bot")
 
-    # Connect to the database
-    loop.run_until_complete(database.connect())
-    logger.get("database").info("successfully connected to database")
-
     # Run the bot
     start_bot(loop)
-
-    # Disconnect from the database
-    loop.run_until_complete(database.disconnect())
-    logger.get("database").info("successfully disconnected from database")
 
     logger.get().info("bot exited gracefully. good bye!")
 

@@ -3,10 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
 
-from common.database import Category, Ticket
+from common.database import get_db, Category, Ticket
 from .categories import router as categories_router
 from .models.tickets import TicketResponse, TicketUpdate
-from ..utils.database import get_db
 
 router = APIRouter()
 router.include_router(

@@ -4,13 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
 
-from common.database import CannedResponse
+from common.database import get_db, CannedResponse
 from .models import (
     CannedResponse as CannedResponseModel,
     CannedResponseIn,
     CannedResponseUpdate,
 )
-from ..utils.database import get_db
 
 router = APIRouter()
 

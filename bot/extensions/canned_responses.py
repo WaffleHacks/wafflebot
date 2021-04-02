@@ -1,8 +1,9 @@
 from discord import Message
 from discord.ext.commands import Bot, Cog
 import json
+from sqlalchemy.future import select
 
-from common.database import CannedResponse as Canned
+from common.database import get_db, CannedResponse as Canned
 from .. import embeds
 from ..logger import get as get_logger
 
@@ -25,7 +26,10 @@ class CannedResponses(Cog):
 
         # Attempt to get the message
         key = message.content[1:]
-        response = await Canned.objects.filter(key=key).get()
+        async with get_db() as db:
+            statement = select(Canned).where(Canned.key == key)
+            result = await db.execute(statement)
+        response = result.scalars().first()
 
         # Don't respond if no model
         if response is None:

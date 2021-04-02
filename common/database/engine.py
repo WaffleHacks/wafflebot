@@ -1,5 +1,7 @@
+from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from typing import AsyncGenerator
 
 from common import SETTINGS
 
@@ -12,3 +14,15 @@ SessionLocal = sessionmaker(
     class_=AsyncSession,
     future=True,
 )
+
+
+@asynccontextmanager
+async def get_db() -> AsyncGenerator:
+    """
+    Open a new session to the database
+    """
+    try:
+        async with SessionLocal() as session:
+            yield session
+    finally:
+        await session.close()

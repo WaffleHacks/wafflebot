@@ -4,10 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse, Response, URL
 from typing import Dict, Optional
 
-from common.database import User
+from common.database import get_db, User
 from .models import UserInfo
 from .oauth import get_discord_client
-from ..utils.database import get_db
 from ..utils.session import get_session, is_logged_in, Session
 
 router = APIRouter()
