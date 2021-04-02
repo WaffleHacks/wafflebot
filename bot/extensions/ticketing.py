@@ -1,11 +1,14 @@
+import asyncio
 from datetime import datetime
-from discord import utils, Embed, Member, PermissionOverwrite, RawReactionActionEvent
+from discord import utils, TextChannel, Embed, Member, PermissionOverwrite
 from discord.ext.commands import Bot, Cog, command, Context
 from sqlalchemy.exc import IntegrityError
+from typing import Optional
 
-from common.database import get_db, Ticket, User
+from common.database import get_db, SettingsKey, Ticket, User
 from ..converters import DateTimeConverter
 from ..logger import get as get_logger
+from ..permissions import has_role
 
 DESCRIPTION = "Open and manage support tickets"
 
@@ -13,6 +16,30 @@ DESCRIPTION = "Open and manage support tickets"
 # claim    -> assigns a staff member to a ticket         (staff)
 # transfer -> transfers a claimed ticket to another user (staff)
 # unclaim  -> removes the claim on the current ticket    (staff)
+
+
+async def close_ticket(ticket_id: int, channel: TextChannel, wait: int):
+    """
+    Close a ticket and remove its channel
+    :param ticket_id: the id of the ticket
+    :param channel: the discord channel
+    :param wait: the number of seconds to wait before deleting
+    """
+    # Wait before deleting the ticket
+    await asyncio.sleep(wait)
+
+    async with get_db() as db:
+        # Retrieve the ticket from the database
+        ticket = await db.get(Ticket, ticket_id)
+        if ticket is None:
+            return
+
+        # Mark the ticket as closed
+        ticket.is_open = False
+        await db.commit()
+
+    # Delete the channel
+    await channel.delete()
 
 
 class Ticketing(Cog):
@@ -35,13 +62,43 @@ class Ticketing(Cog):
         pass
 
     @command()
-    async def close(self, ctx: Context, *, at: DateTimeConverter = datetime.utcnow()):
+    @has_role(SettingsKey.MentionRole)
+    async def close(self, ctx: Context, *, at: Optional[DateTimeConverter]):
         """
         Close the current ticket. Can be delayed with the `at` argument, defaults to now.
         :param ctx: the command context
         :param at: when to close the ticket
         """
-        pass
+        # Check that the channel is a ticket
+        # TODO: get category(s) from database
+        if ctx.channel.category.name != "Tickets":
+            return
+
+        # Retrieve the ticket id from the channel name
+        # TODO: the ticket id in the database should probably correspond to the channel id in Discord
+        try:
+            parts = ctx.channel.name.split("-")
+            if len(parts) != 2:
+                return
+
+            ticket_id = int(parts[1])
+        except ValueError:
+            return
+
+        # Close the ticket
+        if at is None:
+            await close_ticket(ticket_id, ctx.channel, 0)
+        else:
+            # Calculate the seconds to wait
+            delta = at - datetime.utcnow()
+            seconds = delta.total_seconds()
+
+            # Ensure the time to wait is positive
+            if seconds < 0:
+                await ctx.channel.send("Cannot close channel in the past!")
+                return
+
+            self.bot.loop.create_task(close_ticket(ticket_id, ctx.channel, seconds))
 
     @command(aliases=["ticket"])
     async def open(self, ctx: Context, reason: str = ""):
