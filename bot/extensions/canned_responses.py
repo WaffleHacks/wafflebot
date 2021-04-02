@@ -1,6 +1,5 @@
 from discord import Message
 from discord.ext.commands import Bot, Cog
-import json
 from sqlalchemy.future import select
 
 from common.database import get_db, CannedResponse as Canned
@@ -42,8 +41,7 @@ class CannedResponses(Cog):
         embed.description = response.content
 
         # Add fields if exists
-        fields = json.loads(response.fields)
-        for name, content in fields.items():
+        for name, content in response.fields.items():
             embed.add_field(name=name, value=content, inline=False)
 
         await message.channel.send(embed=embed)
