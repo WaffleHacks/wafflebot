@@ -10,7 +10,7 @@ from .tickets import router as tickets_router
 from .static import router as static_router
 from .utils.session import is_logged_in
 
-app = FastAPI()
+app = FastAPI(docs_url=None, swagger_ui_oauth2_redirect_url=None, redoc_url="/docs")
 
 # Register middleware
 app.add_middleware(SessionMiddleware, secret_key=SETTINGS.api.secret_key)
