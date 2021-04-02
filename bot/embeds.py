@@ -5,17 +5,20 @@ from typing import List, Tuple, Union
 EMBED_COLOR = Color.from_rgb(208, 129, 50)
 
 
-def default(author: Union[Member, User]) -> Embed:
+def default(author: Union[Member, User], has_footer=True) -> Embed:
     """
     Generate an embed in the default format
     :param author: the command issuer
+    :param has_footer: whether to add the footer and timestamp
     :return: the default embed format
     """
     # Set constants
-    embed = Embed(color=EMBED_COLOR, timestamp=datetime.now(), type="rich")
+    embed = Embed(color=EMBED_COLOR, type="rich")
 
     # Set the footer
-    embed.set_footer(text=f"Requested by {author}", icon_url=str(author.avatar_url))
+    if has_footer:
+        embed.set_footer(text=f"Requested by {author}", icon_url=str(author.avatar_url))
+        embed.timestamp = datetime.now()
 
     return embed
 

@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from discord import utils, TextChannel, Embed, Member, PermissionOverwrite
+from discord import utils, TextChannel, Member, PermissionOverwrite
 from discord.ext.commands import Bot, Cog, command, Context
 from sqlalchemy.exc import IntegrityError
 from typing import Optional
@@ -102,7 +102,7 @@ class Ticketing(Cog):
             self.bot.loop.create_task(close_ticket(ticket_id, ctx.channel, seconds))
 
     @command(aliases=["ticket"])
-    async def open(self, ctx: Context, reason: str = ""):
+    async def open(self, ctx: Context, *, reason: str = ""):
         """
         Open a new ticket with an optional reason
         :param ctx: the command context
@@ -166,11 +166,9 @@ class Ticketing(Cog):
         )
 
         # Notify of successful creation
-        await ctx.channel.send(
-            embed=Embed(
-                description=f":white_check_mark: Thanks for creating ticket: {ticket_channel.mention}"
-            )
-        )
+        embed = embeds.default(ctx.author)
+        embed.description = f":white_check_mark: Your ticket has been created!\n\n{ticket_channel.mention}"
+        await ctx.channel.send(embed=embed)
 
         # Ping the people for the ticket and instantly delete the message
         ping_message = " ".join(
@@ -181,7 +179,8 @@ class Ticketing(Cog):
 
         # Create the "welcome" embed
         # TODO: get embed content from DB
-        embed = Embed(title="New Ticket")
+        embed = embeds.default(ctx.author, has_footer=False)
+        embed.title = "New Ticket"
         await ticket_channel.send(embed=embed)
 
     @command()
