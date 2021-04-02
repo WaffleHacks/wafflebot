@@ -24,6 +24,7 @@ cbor2 = "^5.2.0"
 aiofiles = "^0.6.0"
 itsdangerous = "^1.1.0"
 asyncpg = "^0.22.0"
+dateparser = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.812"
