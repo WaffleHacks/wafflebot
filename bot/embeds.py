@@ -2,7 +2,7 @@ from datetime import datetime
 from discord import Color, Embed, Member, User
 from typing import List, Tuple, Union
 
-EMBED_COLOR = Color.from_rgb(0, 0, 0)
+EMBED_COLOR = Color.from_rgb(208, 129, 50)
 
 
 def default(author: Union[Member, User]) -> Embed:
