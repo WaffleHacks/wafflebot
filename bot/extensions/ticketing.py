@@ -81,7 +81,7 @@ class Ticketing(Cog):
         self.logger.info("unloaded ticketing commands")
 
     @command()
-    @has_role(SettingsKey.MentionRole)
+    @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
     @in_ticket()
     async def add(self, ctx: Context, user: Member):
         """
@@ -111,7 +111,7 @@ class Ticketing(Cog):
         await ctx.channel.send(embed=embed)
 
     @command()
-    @has_role(SettingsKey.MentionRole)
+    @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
     @in_ticket()
     async def close(self, ctx: Context, *, at: Optional[DateTimeConverter]):
         """
@@ -234,7 +234,7 @@ class Ticketing(Cog):
         await ctx.channel.send(embed=embed)
 
     @command()
-    @has_role(SettingsKey.MentionRole)
+    @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
     @in_ticket()
     async def remove(self, ctx: Context, user: Member):
         """

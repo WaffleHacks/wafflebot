@@ -6,12 +6,12 @@ from discord.ext.commands import (
     ExtensionNotFound,
     ExtensionNotLoaded,
     group,
-    is_owner,
     NoEntryPointError,
 )
 
 from .. import embeds
 from ..logger import get as get_logger
+from ..permissions import has_role, SettingsKey
 
 DESCRIPTION = "Commands for managing the bot"
 
@@ -19,7 +19,7 @@ logger = get_logger("extensions.management")
 
 
 @group()
-@is_owner()
+@has_role(SettingsKey.ManagementRole)
 async def management(ctx: Context):
     """
     Extensions management group
