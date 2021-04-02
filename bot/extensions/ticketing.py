@@ -81,13 +81,34 @@ class Ticketing(Cog):
         self.logger.info("unloaded ticketing commands")
 
     @command()
+    @has_role(SettingsKey.MentionRole)
+    @in_ticket()
     async def add(self, ctx: Context, user: Member):
         """
         Add a user to the current ticket
         :param ctx: the command context
         :param user: the user to add
         """
-        pass
+        # Check if the user is already added
+        if user in ctx.channel.overwrites:
+            embed = embeds.default(ctx.author, has_footer=False)
+            embed.description = f":x: {user.mention} is already added to the ticket!"
+            await ctx.channel.send(embed=embed)
+            return
+
+        # Set the permissions
+        await ctx.channel.set_permissions(
+            user,
+            read_messages=True,
+            read_message_history=True,
+            send_messages=True,
+            add_reactions=True,
+        )
+
+        # Notify success
+        embed = embeds.default(ctx.author, has_footer=False)
+        embed.description = f":white_check_mark: Added {user.mention} to the ticket!"
+        await ctx.channel.send(embed=embed)
 
     @command()
     @has_role(SettingsKey.MentionRole)
@@ -212,13 +233,32 @@ class Ticketing(Cog):
         await ctx.channel.send(embed=embed)
 
     @command()
+    @has_role(SettingsKey.MentionRole)
+    @in_ticket()
     async def remove(self, ctx: Context, user: Member):
         """
         Remove a user from the current ticket
         :param ctx: the command context
         :param user: the user to remove
         """
-        pass
+        # Check that the user is already in the ticket
+        if user not in ctx.channel.overwrites:
+            embed = embeds.default(ctx.author, has_footer=False)
+            embed.description = f":x: {user.mention} is not in the ticket!"
+            await ctx.channel.send(embed=embed)
+            return
+
+        # TODO: prevent removing support agents/managers
+
+        # Remove their permissions
+        await ctx.channel.set_permissions(user, overwrite=None)
+
+        # Notify success
+        embed = embeds.default(ctx.author, has_footer=False)
+        embed.description = (
+            f":white_check_mark: Removed {user.mention} from the ticket!"
+        )
+        await ctx.channel.send(embed=embed)
 
     @command()
     async def rename(self, ctx: Context, name: str):
