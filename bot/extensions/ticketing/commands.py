@@ -1,73 +1,21 @@
-import asyncio
 from datetime import datetime
-from discord import utils, TextChannel, Member, PermissionOverwrite
-from discord.ext.commands import check, command, Bot, Cog, Context
+from discord import utils, Member, PermissionOverwrite
+from discord.ext.commands import command, Bot, Cog, Context
 from sqlalchemy.exc import IntegrityError
 from typing import Optional
 
 from common.database import get_db, SettingsKey, Ticket, User
-from .. import embeds
-from ..converters import DateTimeConverter
-from ..logger import get as get_logger
-from ..permissions import has_role
-
-DESCRIPTION = "Open and manage support tickets"
+from bot import embeds
+from bot.converters import DateTimeConverter
+from bot.logger import get as get_logger
+from bot.permissions import has_role
+from .checks import in_ticket
+from .helpers import close_ticket
 
 # TODO: add commands for claim, transfer, and unclaim
 # claim    -> assigns a staff member to a ticket         (staff)
 # transfer -> transfers a claimed ticket to another user (staff)
 # unclaim  -> removes the claim on the current ticket    (staff)
-
-
-async def close_ticket(ticket_id: int, channel: TextChannel, wait: int):
-    """
-    Close a ticket and remove its channel
-    :param ticket_id: the id of the ticket
-    :param channel: the discord channel
-    :param wait: the number of seconds to wait before deleting
-    """
-    # Wait before deleting the ticket
-    await asyncio.sleep(wait)
-
-    async with get_db() as db:
-        # Retrieve the ticket from the database
-        ticket = await db.get(Ticket, ticket_id)
-        if ticket is None:
-            return
-
-        # Mark the ticket as closed
-        ticket.is_open = False
-        await db.commit()
-
-    # Delete the channel
-    await channel.delete()
-
-
-def in_ticket():
-    """
-    Require that the command is executed within the context of a ticket
-    """
-
-    async def predicate(ctx: Context):
-        # Check that the channel is a ticket
-        # TODO: get category(s) from database
-        if ctx.channel.category.name != "Tickets":
-            return False
-
-        # Check that the channel has the proper name format
-        # TODO: the ticket id in the database should probably correspond to the channel id in Discord
-        try:
-            parts = ctx.channel.name.split("-")
-            if len(parts) != 2:
-                return False
-
-            int(parts[1])
-        except ValueError:
-            return False
-
-        return True
-
-    return check(predicate)
 
 
 class Ticketing(Cog):
@@ -277,19 +225,3 @@ class Ticketing(Cog):
         :param ctx: the command context
         """
         pass
-
-
-def setup(bot: Bot):
-    """
-    Register the cog
-    :param bot: the underlying bot
-    """
-    bot.add_cog(Ticketing(bot))
-
-
-def teardown(bot: Bot):
-    """
-    Unregister the cog
-    :param bot: the underlying bot
-    """
-    bot.remove_cog("Ticketing")
