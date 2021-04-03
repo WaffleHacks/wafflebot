@@ -2,16 +2,15 @@ from datetime import datetime
 from discord import utils, Member, PermissionOverwrite
 from discord.ext.commands import command, Bot, Cog, Context
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.future import select
 from typing import Optional
 
-from common.database import get_db, Setting, SettingsKey, Ticket, User
+from common.database import get_db, SettingsKey, Ticket, User
 from bot import embeds
 from bot.converters import DateTimeConverter
 from bot.logger import get as get_logger
 from bot.permissions import has_role
 from .checks import in_ticket
-from .helpers import close_ticket
+from .helpers import close_ticket, get_channel_category
 
 # TODO: add commands for claim, transfer, and unclaim
 # claim    -> assigns a staff member to a ticket         (staff)
@@ -98,19 +97,13 @@ class Ticketing(Cog):
         :param ctx: the command context
         :param reason: an optional reason for why
         """
-        # Get the channel category id
-        async with get_db() as db:
-            statement = select(Setting).where(Setting.key == SettingsKey.TicketCategory)
-            result = await db.execute(statement)
-        category_id = int(result.scalars().first().value)
-
         # Get the channel category
-        category = utils.get(ctx.guild.categories, id=category_id)
+        category = await get_channel_category(ctx.guild.categories)
         if category is None:
             await ctx.channel.send("Could not create ticket, category does not exist!")
 
+        # Ensure the user exists in the database
         async with get_db() as db:
-            # Ensure the user exists in the database
             user = User(
                 id=ctx.author.id,
                 username=f"{ctx.author.name}#{ctx.author.discriminator}",
@@ -125,8 +118,8 @@ class Ticketing(Cog):
             except IntegrityError:
                 pass
 
+        # Create a ticket in the database
         async with get_db() as db:
-            # Create a ticket in the database
             ticket = Ticket(
                 # TODO: get the category for the ticket (api side)
                 category_id=2,
