@@ -16,7 +16,7 @@ class Ticket(Base):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, index=True)
     channel_id = sqlalchemy.Column(sqlalchemy.BigInteger, index=True)
     category_id = sqlalchemy.Column(
-        sqlalchemy.Integer, sqlalchemy.ForeignKey("categories.id"), nullable=False
+        sqlalchemy.Integer, sqlalchemy.ForeignKey("categories.id"), nullable=True
     )
     category: "Category" = relationship("Category", back_populates="tickets")
     creator_id = sqlalchemy.Column(

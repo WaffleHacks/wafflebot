@@ -1,29 +1,23 @@
 from datetime import datetime
-from discord import utils, Member, PermissionOverwrite
+from discord import utils, Member
 from discord.ext.commands import command, Bot, Cog, Context
 from sqlalchemy import update
-from sqlalchemy.exc import IntegrityError
 from typing import Optional
 
-from common.database import get_db, SettingsKey, Ticket, User
+from common.database import get_db, SettingsKey, Ticket
 from bot import embeds
 from bot.converters import DateTimeConverter
 from bot.logger import get as get_logger
 from bot.permissions import has_role
 from .checks import in_ticket
-from .helpers import close_ticket, get_channel_category, get_ticket_roles
+from .constants import TICKET_PERMISSIONS
+from .helpers import get_channel_category, get_ticket_roles
+from .tickets import close_ticket, create_ticket
 
 # TODO: add commands for claim, transfer, and unclaim
 # claim    -> assigns a staff member to a ticket         (staff)
 # transfer -> transfers a claimed ticket to another user (staff)
 # unclaim  -> removes the claim on the current ticket    (staff)
-
-TICKET_PERMISSIONS = PermissionOverwrite(
-    read_messages=True,
-    read_message_history=True,
-    send_messages=True,
-    add_reactions=True,
-)
 
 
 class Ticketing(Cog):
@@ -101,55 +95,16 @@ class Ticketing(Cog):
         # Get the channel category
         category = await get_channel_category(ctx.guild.categories)
         if category is None:
-            await ctx.channel.send("Could not create ticket, category does not exist!")
+            self.logger.error("could not create ticket, category does not exist")
+            return
 
-        # Ensure the user exists in the database
-        async with get_db() as db:
-            user = User(
-                id=ctx.author.id,
-                username=f"{ctx.author.name}#{ctx.author.discriminator}",
-                avatar=str(ctx.author.avatar_url),
-                has_panel=True,
-            )
-            db.add(user)
-
-            # Save the user, ignoring any users that already exist
-            try:
-                await db.commit()
-            except IntegrityError:
-                pass
-
-        # Create a ticket in the database
-        async with get_db() as db:
-            ticket = Ticket(
-                # TODO: get the category for the ticket (api side)
-                category_id=2,
-                creator_id=user.id,
-                is_open=True,
-                reason=reason,
-            )
-            db.add(ticket)
-
-            # Save the ticket
-            await db.commit()
-
-        # Get the role(s) that can view tickets
-        roles = await get_ticket_roles()
-        authorized = [utils.get(ctx.guild.roles, id=int(role.value)) for role in roles]
-        authorized.append(ctx.author)
-
-        # Create text channel within category
-        overwrites = {role: TICKET_PERMISSIONS for role in authorized}
-        overwrites[ctx.guild.default_role] = PermissionOverwrite(view_channel=False)
-        ticket_channel = await category.create_text_channel(
-            f"ticket-{ticket.id}", overwrites=overwrites
+        ticket, ticket_channel = await create_ticket(
+            creator=ctx.author,
+            channel_category=category,
+            guild=ctx.guild,
+            category_id=None,
+            reason=reason,
         )
-
-        # Save the channel id
-        async with get_db() as db:
-            ticket.channel_id = ticket_channel.id
-            db.add(ticket)
-            await db.commit()
 
         # Notify of successful creation
         await ctx.channel.send(
@@ -157,23 +112,6 @@ class Ticketing(Cog):
                 f":white_check_mark: Your ticket has been created!\n\n{ticket_channel.mention}"
             )
         )
-
-        # Ping the people for the ticket and instantly delete the message
-        ping_message = " ".join(
-            [
-                entity.mention
-                for i, entity in enumerate(authorized)
-                if type(entity) == Member or roles[i].key == SettingsKey.MentionRole
-            ]
-        )
-        ping = await ticket_channel.send(ping_message)
-        await ping.delete()
-
-        # Create the "welcome" embed
-        # TODO: get embed content from DB
-        embed = embeds.default(ctx.author, has_footer=False)
-        embed.title = "New Ticket"
-        await ticket_channel.send(embed=embed)
 
     @command()
     @has_role(SettingsKey.PanelAccessRole)
