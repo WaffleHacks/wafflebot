@@ -47,3 +47,15 @@ async def get_channel_category(
 
     # Get the channel category
     return utils.get(categories, id=category_id)
+
+
+async def get_ticket_roles() -> List[Setting]:
+    """
+    Get a list of the roles that can view a ticket
+    """
+    async with get_db() as db:
+        statement = select(Setting).where(
+            Setting.key.in_([SettingsKey.PanelAccessRole, SettingsKey.MentionRole])
+        )
+        result = await db.execute(statement)
+        return result.scalars().all()

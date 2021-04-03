@@ -11,7 +11,7 @@ from bot.converters import DateTimeConverter
 from bot.logger import get as get_logger
 from bot.permissions import has_role
 from .checks import in_ticket
-from .helpers import close_ticket, get_channel_category
+from .helpers import close_ticket, get_channel_category, get_ticket_roles
 
 # TODO: add commands for claim, transfer, and unclaim
 # claim    -> assigns a staff member to a ticket         (staff)
@@ -134,17 +134,9 @@ class Ticketing(Cog):
             await db.commit()
 
         # Get the role(s) that can view tickets
-        async with get_db() as db:
-            statement = select(Setting).where(
-                Setting.key.in_([SettingsKey.MentionRole, SettingsKey.PanelAccessRole])
-            )
-            result = await db.execute(statement)
-            roles = result.scalars().all()
-
-            authorized = [
-                utils.get(ctx.guild.roles, id=int(role.value)) for role in roles
-            ]
-            authorized.append(ctx.author)
+        roles = await get_ticket_roles()
+        authorized = [utils.get(ctx.guild.roles, id=int(role.value)) for role in roles]
+        authorized.append(ctx.author)
 
         # Create text channel within category
         overwrites = {role: TICKET_PERMISSIONS for role in authorized}
@@ -213,7 +205,17 @@ class Ticketing(Cog):
             )
             return
 
-        # TODO: prevent removing support agents/managers
+        # Prevent removing support agents/managers
+        roles = await get_ticket_roles()
+        role_ids = set(map(lambda r: r.value, roles))
+        author_roles = set(map(lambda r: str(r.id), ctx.author.roles))
+        if len(role_ids & author_roles) != 0:
+            await ctx.channel.send(
+                embed=embeds.message(
+                    f":x: Cannot remove a ticket helper or ticket manager!"
+                )
+            )
+            return
 
         # Remove their permissions
         await ctx.channel.set_permissions(user, overwrite=None)
