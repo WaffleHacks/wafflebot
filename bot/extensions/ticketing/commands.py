@@ -2,9 +2,10 @@ from datetime import datetime
 from discord import utils, Member, PermissionOverwrite
 from discord.ext.commands import command, Bot, Cog, Context
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.future import select
 from typing import Optional
 
-from common.database import get_db, SettingsKey, Ticket, User
+from common.database import get_db, Setting, SettingsKey, Ticket, User
 from bot import embeds
 from bot.converters import DateTimeConverter
 from bot.logger import get as get_logger
@@ -133,12 +134,17 @@ class Ticketing(Cog):
             await db.commit()
 
         # Get the role(s) that can view tickets
-        # TODO: parameterize viewable authorized
-        authorized = [
-            utils.get(ctx.guild.roles, name="Mentor"),
-            # utils.get(ctx.guild.roles, name="Organizer"),
-            ctx.author,
-        ]
+        async with get_db() as db:
+            statement = select(Setting).where(
+                Setting.key.in_([SettingsKey.MentionRole, SettingsKey.PanelAccessRole])
+            )
+            result = await db.execute(statement)
+            roles = result.scalars().all()
+
+            authorized = [
+                utils.get(ctx.guild.roles, id=int(role.value)) for role in roles
+            ]
+            authorized.append(ctx.author)
 
         # Create text channel within category
         overwrites = {role: TICKET_PERMISSIONS for role in authorized}
@@ -162,7 +168,11 @@ class Ticketing(Cog):
 
         # Ping the people for the ticket and instantly delete the message
         ping_message = " ".join(
-            [entity.mention for entity in authorized if entity is not None]
+            [
+                entity.mention
+                for i, entity in enumerate(authorized)
+                if type(entity) == Member or roles[i].key == SettingsKey.MentionRole
+            ]
         )
         ping = await ticket_channel.send(ping_message)
         await ping.delete()
