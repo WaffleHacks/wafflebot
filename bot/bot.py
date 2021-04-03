@@ -29,13 +29,24 @@ async def block_dms_globally(ctx: Context):
 # Dynamically load extensions
 extension_logger = logger.get("extensions")
 extensions_path = Path(__file__).parent.joinpath("extensions")
-for file in os.listdir(extensions_path):
-    # Skip non-python files and __init__.py
-    if not file.endswith(".py") or file == "__init__.py":
+for path in os.listdir(extensions_path):
+    potential_import = extensions_path.joinpath(path)
+
+    # Ignore files not ending in .py and package initializations
+    if potential_import.is_file() and (
+        not path.endswith(".py") or path == "__init__.py"
+    ):
+        continue
+
+    # Ignore directories not containing __init__.py files
+    if (
+        potential_import.is_dir()
+        and not potential_import.joinpath("__init__.py").exists()
+    ):
         continue
 
     # Create the qualified import name
-    import_name = f"bot.extensions.{file[:-3]}"
+    import_name = f"bot.extensions.{path.replace('.py', '')}"
 
     # Attempt to load the extension
     try:
