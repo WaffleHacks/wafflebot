@@ -2,9 +2,10 @@ from datetime import datetime
 from discord import utils, Member, PermissionOverwrite
 from discord.ext.commands import command, Bot, Cog, Context
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.future import select
 from typing import Optional
 
-from common.database import get_db, SettingsKey, Ticket, User
+from common.database import get_db, Setting, SettingsKey, Ticket, User
 from bot import embeds
 from bot.converters import DateTimeConverter
 from bot.logger import get as get_logger
@@ -16,6 +17,13 @@ from .helpers import close_ticket
 # claim    -> assigns a staff member to a ticket         (staff)
 # transfer -> transfers a claimed ticket to another user (staff)
 # unclaim  -> removes the claim on the current ticket    (staff)
+
+TICKET_PERMISSIONS = PermissionOverwrite(
+    read_messages=True,
+    read_message_history=True,
+    send_messages=True,
+    add_reactions=True,
+)
 
 
 class Ticketing(Cog):
@@ -47,13 +55,7 @@ class Ticketing(Cog):
             return
 
         # Set the permissions
-        await ctx.channel.set_permissions(
-            user,
-            read_messages=True,
-            read_message_history=True,
-            send_messages=True,
-            add_reactions=True,
-        )
+        await ctx.channel.set_permissions(user, overwrite=TICKET_PERMISSIONS)
 
         # Notify success
         await ctx.channel.send(
@@ -71,15 +73,12 @@ class Ticketing(Cog):
         :param ctx: the command context
         :param at: when to close the ticket
         """
-        # Retrieve the ticket id from the channel name
-        ticket_id = int(ctx.channel.name.split("-")[1])
-
         # Check if there is an associated voice channel
         voice = utils.get(ctx.guild.voice_channels, name=ctx.channel.name)
 
         # Close the ticket
         if at is None:
-            await close_ticket(ticket_id, ctx.channel, voice, 0)
+            await close_ticket(ctx.channel, voice, 0)
         else:
             # Calculate the seconds to wait
             delta = at - datetime.utcnow()
@@ -90,9 +89,7 @@ class Ticketing(Cog):
                 await ctx.channel.send("Cannot close channel in the past!")
                 return
 
-            self.bot.loop.create_task(
-                close_ticket(ticket_id, ctx.channel, voice, seconds)
-            )
+            self.bot.loop.create_task(close_ticket(ctx.channel, voice, seconds))
 
     @command(aliases=["ticket"])
     async def open(self, ctx: Context, *, reason: str = ""):
@@ -101,9 +98,14 @@ class Ticketing(Cog):
         :param ctx: the command context
         :param reason: an optional reason for why
         """
+        # Get the channel category id
+        async with get_db() as db:
+            statement = select(Setting).where(Setting.key == SettingsKey.TicketCategory)
+            result = await db.execute(statement)
+        category_id = int(result.scalars().first().value)
+
         # Get the channel category
-        # TODO: parameterize ticket category (discord side)
-        category = utils.get(ctx.guild.categories, name="Tickets")
+        category = utils.get(ctx.guild.categories, id=category_id)
         if category is None:
             await ctx.channel.send("Could not create ticket, category does not exist!")
 
@@ -146,17 +148,17 @@ class Ticketing(Cog):
         ]
 
         # Create text channel within category
-        permissions = PermissionOverwrite(
-            read_messages=True,
-            read_message_history=True,
-            send_messages=True,
-            add_reactions=True,
-        )
-        overwrites = {role: permissions for role in authorized}
+        overwrites = {role: TICKET_PERMISSIONS for role in authorized}
         overwrites[ctx.guild.default_role] = PermissionOverwrite(view_channel=False)
         ticket_channel = await category.create_text_channel(
             f"ticket-{ticket.id}", overwrites=overwrites
         )
+
+        # Save the channel id
+        async with get_db() as db:
+            ticket.channel_id = ticket_channel.id
+            db.add(ticket)
+            await db.commit()
 
         # Notify of successful creation
         await ctx.channel.send(

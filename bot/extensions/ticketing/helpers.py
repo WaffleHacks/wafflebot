@@ -1,16 +1,14 @@
 import asyncio
 from discord import TextChannel, VoiceChannel
+from sqlalchemy.future import select
 from typing import Optional
 
 from common.database import get_db, Ticket
 
 
-async def close_ticket(
-    ticket_id: int, text: TextChannel, voice: Optional[VoiceChannel], wait: int
-):
+async def close_ticket(text: TextChannel, voice: Optional[VoiceChannel], wait: int):
     """
     Close a ticket and remove its channel
-    :param ticket_id: the id of the ticket
     :param text: the discord text channel
     :param voice: an optional discord voice channel
     :param wait: the number of seconds to wait before deleting
@@ -20,9 +18,9 @@ async def close_ticket(
 
     async with get_db() as db:
         # Retrieve the ticket from the database
-        ticket = await db.get(Ticket, ticket_id)
-        if ticket is None:
-            return
+        statement = select(Ticket).where(Ticket.channel_id == text.id)
+        result = await db.execute(statement)
+        ticket = result.scalars().first()
 
         # Mark the ticket as closed
         ticket.is_open = False

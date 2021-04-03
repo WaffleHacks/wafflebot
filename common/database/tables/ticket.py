@@ -14,6 +14,7 @@ class Ticket(Base):
     __tablename__ = "tickets"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, index=True)
+    channel_id = sqlalchemy.Column(sqlalchemy.BigInteger, index=True)
     category_id = sqlalchemy.Column(
         sqlalchemy.Integer, sqlalchemy.ForeignKey("categories.id"), nullable=False
     )
