@@ -1,7 +1,7 @@
 from discord.ext.commands import check, Context
 from sqlalchemy.future import select
 
-from common.database import get_db, Setting, SettingsKey
+from common.database import get_db, Setting, SettingsKey, Ticket
 
 
 def in_ticket():
@@ -21,16 +21,12 @@ def in_ticket():
         if ctx.channel.category is not None and ctx.channel.category.id != category_id:
             return False
 
-        # Check that the channel has the proper name format
-        # TODO: the ticket id in the database should probably correspond to the channel id in Discord
-        try:
-            parts = ctx.channel.name.split("-")
-            if len(parts) != 2:
-                return False
-
-            int(parts[1])
-        except ValueError:
-            return False
+        # Check that the channel is a ticket
+        async with get_db() as db:
+            statement = select(Ticket).where(Ticket.channel_id == ctx.channel.id)
+            result = await db.execute(statement)
+            if result.scalars().first() is None:
+                return
 
         return True
 
