@@ -70,9 +70,12 @@ class Ticketing(Cog):
         # Retrieve the ticket id from the channel name
         ticket_id = int(ctx.channel.name.split("-")[1])
 
+        # Check if there is an associated voice channel
+        voice = utils.get(ctx.guild.voice_channels, name=ctx.channel.name)
+
         # Close the ticket
         if at is None:
-            await close_ticket(ticket_id, ctx.channel, 0)
+            await close_ticket(ticket_id, ctx.channel, voice, 0)
         else:
             # Calculate the seconds to wait
             delta = at - datetime.utcnow()
@@ -83,7 +86,9 @@ class Ticketing(Cog):
                 await ctx.channel.send("Cannot close channel in the past!")
                 return
 
-            self.bot.loop.create_task(close_ticket(ticket_id, ctx.channel, seconds))
+            self.bot.loop.create_task(
+                close_ticket(ticket_id, ctx.channel, voice, seconds)
+            )
 
     @command(aliases=["ticket"])
     async def open(self, ctx: Context, *, reason: str = ""):
@@ -225,3 +230,23 @@ class Ticketing(Cog):
         :param ctx: the command context
         """
         pass
+
+    @command()
+    @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
+    @in_ticket()
+    async def voice(self, ctx: Context):
+        """
+        Create a voice channel for the ticket
+        :param ctx: the command context
+        """
+        # Create a voice channel with the same name as the ticket
+        channel = await ctx.guild.create_voice_channel(
+            ctx.channel.name,
+            category=ctx.channel.category,
+            overwrites=ctx.channel.overwrites,
+        )
+
+        # Notify of the new channel
+        embed = embeds.default(ctx.author, has_footer=False)
+        embed.description = f":white_check_mark: Successfully create your voice channel! {channel.mention}"
+        await ctx.channel.send(embed=embed)
