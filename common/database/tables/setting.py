@@ -8,6 +8,7 @@ class SettingsKey(Enum):
     ManagementRole = 1
     PanelAccessRole = 2
     MentionRole = 3
+    TicketCategory = 4
 
 
 class Setting(Base):
