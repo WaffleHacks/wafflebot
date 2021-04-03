@@ -223,13 +223,25 @@ class Ticketing(Cog):
         )
 
     @command()
-    async def rename(self, ctx: Context, name: str):
+    @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
+    @in_ticket()
+    async def rename(self, ctx: Context, *, name: str):
         """
         Rename the current ticket
         :param ctx: the command context
         :param name: the ticket's new name
         """
-        pass
+        # Get the ticket's number
+        number = ctx.channel.name.split("-")[-1]
+
+        # Convert the name to a consistent format
+        name = name.lower().replace(" ", "-")
+
+        # Format the name with the number
+        formatted = f"{name}{number}" if name.endswith("-") else f"{name}-{number}"
+
+        # Rename the channel
+        await ctx.channel.edit(name=formatted)
 
     @command()
     async def sync(self, ctx: Context):
