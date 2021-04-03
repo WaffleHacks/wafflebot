@@ -23,6 +23,20 @@ def default(author: Union[Member, User], has_footer=True) -> Embed:
     return embed
 
 
+def message(content) -> Embed:
+    """
+    Generate an embed for a text message
+    :param content: the message content
+    """
+    # Create the base embed
+    embed = Embed(color=EMBED_COLOR, type="rich")
+
+    # Set the content
+    embed.description = content
+
+    return embed
+
+
 def help_(
     author: Union[Member, User], name: str, explanations: List[Tuple[str, str]]
 ) -> Embed:

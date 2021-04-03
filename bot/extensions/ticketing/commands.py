@@ -39,9 +39,11 @@ class Ticketing(Cog):
         """
         # Check if the user is already added
         if user in ctx.channel.overwrites:
-            embed = embeds.default(ctx.author, has_footer=False)
-            embed.description = f":x: {user.mention} is already added to the ticket!"
-            await ctx.channel.send(embed=embed)
+            await ctx.channel.send(
+                embed=embeds.message(
+                    f":x: {user.mention} is already added to the ticket!"
+                )
+            )
             return
 
         # Set the permissions
@@ -54,9 +56,11 @@ class Ticketing(Cog):
         )
 
         # Notify success
-        embed = embeds.default(ctx.author, has_footer=False)
-        embed.description = f":white_check_mark: Added {user.mention} to the ticket!"
-        await ctx.channel.send(embed=embed)
+        await ctx.channel.send(
+            embed=embeds.message(
+                f":white_check_mark: Added {user.mention} to the ticket!"
+            )
+        )
 
     @command()
     @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
@@ -155,9 +159,11 @@ class Ticketing(Cog):
         )
 
         # Notify of successful creation
-        embed = embeds.default(ctx.author)
-        embed.description = f":white_check_mark: Your ticket has been created!\n\n{ticket_channel.mention}"
-        await ctx.channel.send(embed=embed)
+        await ctx.channel.send(
+            embed=embeds.message(
+                f":white_check_mark: Your ticket has been created!\n\n{ticket_channel.mention}"
+            )
+        )
 
         # Ping the people for the ticket and instantly delete the message
         ping_message = " ".join(
@@ -197,9 +203,9 @@ class Ticketing(Cog):
         """
         # Check that the user is already in the ticket
         if user not in ctx.channel.overwrites:
-            embed = embeds.default(ctx.author, has_footer=False)
-            embed.description = f":x: {user.mention} is not in the ticket!"
-            await ctx.channel.send(embed=embed)
+            await ctx.channel.send(
+                embed=embeds.message(f":x: {user.mention} is not in the ticket!")
+            )
             return
 
         # TODO: prevent removing support agents/managers
@@ -208,11 +214,11 @@ class Ticketing(Cog):
         await ctx.channel.set_permissions(user, overwrite=None)
 
         # Notify success
-        embed = embeds.default(ctx.author, has_footer=False)
-        embed.description = (
-            f":white_check_mark: Removed {user.mention} from the ticket!"
+        await ctx.channel.send(
+            embed=embeds.message(
+                f":white_check_mark: Removed {user.mention} from the ticket!"
+            )
         )
-        await ctx.channel.send(embed=embed)
 
     @command()
     async def rename(self, ctx: Context, name: str):
@@ -247,6 +253,8 @@ class Ticketing(Cog):
         )
 
         # Notify of the new channel
-        embed = embeds.default(ctx.author, has_footer=False)
-        embed.description = f":white_check_mark: Successfully create your voice channel! {channel.mention}"
-        await ctx.channel.send(embed=embed)
+        await ctx.channel.send(
+            embed=embeds.message(
+                f":white_check_mark: Successfully create your voice channel! {channel.mention}"
+            )
+        )
