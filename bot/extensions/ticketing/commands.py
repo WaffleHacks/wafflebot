@@ -1,11 +1,11 @@
 from datetime import datetime
 from discord import utils, Member, PermissionOverwrite
 from discord.ext.commands import command, Bot, Cog, Context
+from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.future import select
 from typing import Optional
 
-from common.database import get_db, Setting, SettingsKey, Ticket, User
+from common.database import get_db, SettingsKey, Ticket, User
 from bot import embeds
 from bot.converters import DateTimeConverter
 from bot.logger import get as get_logger
@@ -249,12 +249,40 @@ class Ticketing(Cog):
         await ctx.channel.edit(name=formatted)
 
     @command()
+    @has_role(SettingsKey.PanelAccessRole)
     async def sync(self, ctx: Context):
         """
-        Sync the bot's database to the channels
+        Sync the discord channels with the bot's database
         :param ctx: the command context
         """
-        pass
+        # Get the channel category
+        category = await get_channel_category(ctx.guild.categories)
+        if category is None:
+            return
+
+        # Get all the channel ids
+        channel_ids = [channel.id for channel in category.channels]
+
+        # Mark all tickets as closed that no longer have their channel
+        async with get_db() as db:
+            statement = (
+                update(Ticket)
+                .where(Ticket.is_open.is_(True), Ticket.channel_id.not_in(channel_ids))
+                .values(is_open=False)
+            )
+            result = await db.execute(statement)
+            await db.commit()
+
+        # Notify success
+        if result.rowcount == 0:
+            message = embeds.message(
+                ":white_check_mark: The database is already in sync!"
+            )
+        else:
+            message = embeds.message(
+                f":white_check_mark: {result.rowcount} tickets marked as closed!"
+            )
+        await ctx.channel.send(embed=message)
 
     @command()
     @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)

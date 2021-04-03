@@ -41,9 +41,11 @@ async def get_channel_category(
     """
     # Get the channel category id
     async with get_db() as db:
-        statement = select(Setting).where(Setting.key == SettingsKey.TicketCategory)
+        statement = select(Setting.value).where(
+            Setting.key == SettingsKey.TicketCategory
+        )
         result = await db.execute(statement)
-    category_id = int(result.scalars().first().value)
+    category_id = int(result.scalars().first())
 
     # Get the channel category
     return utils.get(categories, id=category_id)
