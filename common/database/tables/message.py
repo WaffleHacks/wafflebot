@@ -1,3 +1,4 @@
+from datetime import datetime
 import sqlalchemy
 from sqlalchemy.orm import relationship
 from typing import TYPE_CHECKING
@@ -22,3 +23,6 @@ class Message(Base):
     )
     sender: "User" = relationship("User", back_populates="messages")
     content = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
+    created_at = sqlalchemy.Column(
+        sqlalchemy.DateTime, nullable=True, default=datetime.utcnow()
+    )

@@ -281,7 +281,6 @@ class Ticketing(Cog):
             msg = Message(
                 ticket=ticket,
                 sender_id=message.author.id,
-                is_reaction=False,
                 content=message.content,
             )
             db.add(msg)
