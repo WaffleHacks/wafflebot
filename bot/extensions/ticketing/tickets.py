@@ -16,7 +16,7 @@ from typing import Optional, Tuple
 from common.database import get_db, Setting, SettingsKey, Ticket, User
 from bot import embeds
 from .constants import NO_PERMISSIONS, TICKET_PERMISSIONS
-from .helpers import get_ticket_roles
+from .helpers import create_user_if_not_exists, get_ticket_roles
 
 
 async def archive_message(channel: TextChannel, executor_id: int):
@@ -117,20 +117,7 @@ async def create_ticket(
     :return: the database ticket and the ticket channel
     """
     # Ensure the user exists in the database
-    async with get_db() as db:
-        user = User(
-            id=creator.id,
-            username=f"{creator.name}#{creator.discriminator}",
-            avatar=str(creator.avatar_url),
-            has_panel=True,
-        )
-        db.add(user)
-
-        # Save the user, ignoring any users that already exist
-        try:
-            await db.commit()
-        except IntegrityError:
-            pass
+    await create_user_if_not_exists(creator)
 
     # Add the ticket to the database
     async with get_db() as db:

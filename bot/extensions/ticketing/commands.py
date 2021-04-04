@@ -1,17 +1,18 @@
 from datetime import datetime
-from discord import utils, Member
+from discord import utils, Member, Message as DiscordMessage, TextChannel
 from discord.ext.commands import command, Bot, Cog, Context
 from sqlalchemy import update
+from sqlalchemy.future import select
 from typing import Optional
 
-from common.database import get_db, SettingsKey, Ticket
+from common.database import get_db, Message, SettingsKey, Ticket
 from bot import embeds
 from bot.converters import DateTimeConverter
 from bot.logger import get as get_logger
 from bot.permissions import has_role
 from .checks import in_ticket
 from .constants import TICKET_PERMISSIONS
-from .helpers import get_channel_category, get_ticket_roles
+from .helpers import create_user_if_not_exists, get_channel_category, get_ticket_roles
 from .tickets import close_ticket, create_ticket
 
 # TODO: add commands for claim, transfer, and unclaim
@@ -245,3 +246,41 @@ class Ticketing(Cog):
                 f":white_check_mark: Successfully create your voice channel! {channel.mention}"
             )
         )
+
+    @Cog.listener()
+    async def on_message(self, message: DiscordMessage):
+        # Only work for text channels
+        if not isinstance(message.channel, TextChannel):
+            return
+
+        # Ignore messages not in a category
+        if message.channel.category is None:
+            return
+
+        # Check if channel is in the ticket category
+        category = await get_channel_category(message.guild.categories)
+        if category.id != message.channel.category_id:
+            return
+
+        # Ensure the user exists
+        await create_user_if_not_exists(message.author)
+
+        async with get_db() as db:
+            # Check that the channel is a ticket
+            statement = select(Ticket).where(Ticket.channel_id == message.channel.id)
+            result = await db.execute(statement)
+            ticket = result.scalars().first()
+            if ticket is None:
+                return
+
+            # Create the new message
+            msg = Message(
+                ticket=ticket,
+                sender_id=message.author.id,
+                is_reaction=False,
+                content=message.content,
+            )
+            db.add(msg)
+
+            # Save the changes
+            await db.commit()
