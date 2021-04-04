@@ -12,10 +12,11 @@ def in_ticket():
 
     async def predicate(ctx: Context):
         # Check that the channel is in the proper category
-        if ctx.channel.category is not None:
-            category = await get_channel_category(ctx.guild.categories)
-            if category.id != ctx.channel.category.id:
-                return False
+        if ctx.channel.category is None:
+            return
+        category = await get_channel_category(ctx.guild.categories)
+        if category.id != ctx.channel.category.id:
+            return False
 
         # Check that the channel is a ticket
         async with get_db() as db:
