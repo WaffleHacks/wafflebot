@@ -21,5 +21,4 @@ class Message(Base):
         sqlalchemy.BigInteger, sqlalchemy.ForeignKey("users.id"), nullable=False
     )
     sender: "User" = relationship("User", back_populates="messages")
-    is_reaction = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False)
     content = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
