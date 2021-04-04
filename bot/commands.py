@@ -11,8 +11,11 @@ from discord.ext.commands import (
     MissingRequiredArgument,
 )
 import re
+import sys
+import traceback
 from typing import get_type_hints, Dict, List, Tuple
 
+from common import SETTINGS
 from . import logger, embeds
 
 
@@ -41,9 +44,17 @@ async def on_error(ctx: Context, exception: Exception):
             f" Use `.help {ctx.command.qualified_name}` for usage information"
         )
 
-    # Log the error
     else:
+        # Log the error
         logger.get().error(f"{type(exception).__name__}: {exception}")
+
+        # Log the full traceback if enabled
+        if SETTINGS.full_errors:
+            traceback.print_exception(
+                type(exception), exception, exception.__traceback__, file=sys.stdout
+            )
+
+        # Notify the user
         await ctx.channel.send("An internal error occurred, please try again later")
 
 

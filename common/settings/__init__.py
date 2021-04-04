@@ -14,6 +14,8 @@ class Settings(BaseModel):
     api: ApiSettings
     bot: BotSettings
 
+    full_errors: bool = False
+
     database_url: DatabaseUrl
     discord_token: DiscordToken
     redis_url: RedisDsn
