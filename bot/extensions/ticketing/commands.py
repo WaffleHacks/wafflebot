@@ -5,7 +5,8 @@ from sqlalchemy import update
 from sqlalchemy.future import select
 from typing import Optional
 
-from common.database import get_db, Message, SettingsKey, Ticket
+from common import ConfigKey
+from common.database import get_db, Message, Ticket
 from bot import embeds
 from bot.converters import DateTimeConverter
 from bot.logger import get as get_logger
@@ -32,7 +33,7 @@ class Ticketing(Cog):
         self.logger.info("unloaded ticketing commands")
 
     @command()
-    @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
+    @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
     @in_ticket()
     async def add(self, ctx: Context, user: Member):
         """
@@ -60,7 +61,7 @@ class Ticketing(Cog):
         )
 
     @command()
-    @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
+    @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
     @in_ticket()
     async def close(self, ctx: Context, *, at: Optional[DateTimeConverter]):
         """
@@ -117,7 +118,7 @@ class Ticketing(Cog):
         )
 
     @command()
-    @has_role(SettingsKey.PanelAccessRole)
+    @has_role(ConfigKey.PanelAccessRole)
     async def panel(self, ctx: Context):
         """
         Get a link to the panel
@@ -131,7 +132,7 @@ class Ticketing(Cog):
         await ctx.channel.send(embed=embed)
 
     @command()
-    @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
+    @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
     @in_ticket()
     async def remove(self, ctx: Context, user: Member):
         """
@@ -147,9 +148,8 @@ class Ticketing(Cog):
             return
 
         # Prevent removing support agents/managers
-        roles = await get_ticket_roles()
-        role_ids = set(map(lambda r: r.value, roles))
-        author_roles = set(map(lambda r: str(r.id), ctx.author.roles))
+        role_ids = set(await get_ticket_roles())
+        author_roles = set(map(lambda r: r.id, ctx.author.roles))
         if len(role_ids & author_roles) != 0:
             await ctx.channel.send(
                 embed=embeds.message(
@@ -169,7 +169,7 @@ class Ticketing(Cog):
         )
 
     @command()
-    @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
+    @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
     @in_ticket()
     async def rename(self, ctx: Context, *, name: str):
         """
@@ -190,7 +190,7 @@ class Ticketing(Cog):
         await ctx.channel.edit(name=formatted)
 
     @command()
-    @has_role(SettingsKey.PanelAccessRole)
+    @has_role(ConfigKey.PanelAccessRole)
     async def sync(self, ctx: Context):
         """
         Sync the discord channels with the bot's database
@@ -226,7 +226,7 @@ class Ticketing(Cog):
         await ctx.channel.send(embed=message)
 
     @command()
-    @has_role(SettingsKey.MentionRole, SettingsKey.PanelAccessRole)
+    @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
     @in_ticket()
     async def voice(self, ctx: Context):
         """

@@ -2,7 +2,7 @@ import asyncio
 import signal
 import sys
 
-from common import SETTINGS
+from common import CONFIG, SETTINGS
 from . import logger
 from .bot import bot
 
@@ -95,10 +95,18 @@ def main():
     loop = asyncio.get_event_loop()
     logger.get().info("starting bot")
 
+    # Connect to Redis
+    loop.run_until_complete(CONFIG.connect())
+    logger.get().info("connected to redis")
+
     # Run the bot
     start_bot(loop)
 
     logger.get().info("bot exited gracefully. good bye!")
+
+    # Disconnect from Redis
+    loop.run_until_complete(CONFIG.disconnect())
+    logger.get().info("disconnected from redis")
 
     # Shutdown the event loop and cleanup tasks
     # From https://github.com/Rapptz/discord.py/blob/master/discord/client.py#L88-L95

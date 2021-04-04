@@ -9,11 +9,11 @@ from discord import (
     TextChannel,
     VoiceChannel,
 )
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
 from typing import Optional, Tuple
 
-from common.database import get_db, Setting, SettingsKey, Ticket, User
+from common import CONFIG
+from common.database import get_db, Ticket
 from bot import embeds
 from .constants import NO_PERMISSIONS, TICKET_PERMISSIONS
 from .helpers import create_user_if_not_exists, get_ticket_roles
@@ -26,25 +26,18 @@ async def archive_message(channel: TextChannel, executor_id: int):
     """
     guild = channel.guild
 
-    async with get_db() as db:
-        # Get the archive channel ID
-        result = await db.execute(
-            select(Setting.value).where(Setting.key == SettingsKey.ArchiveChannel)
-        )
-        archive_channel_id = result.scalars().first()
-        if archive_channel_id is None:
-            return
+    # Get the channel
+    archive_channel_id = await CONFIG.archive_channel()
+    archive_channel = guild.get_channel(archive_channel_id)
+    if archive_channel is None:
+        return
 
+    async with get_db() as db:
         # Get the ticket from the database
         result = await db.execute(select(Ticket).where(Ticket.channel_id == channel.id))
         ticket = result.scalars().first()
         if ticket is None:
             return
-
-    # Get the channel
-    archive_channel = guild.get_channel(int(archive_channel_id))
-    if archive_channel is None:
-        return
 
     # Create the embed
     embed = embeds.default(guild.me, has_footer=False)
@@ -132,11 +125,11 @@ async def create_ticket(
 
     # Get the role(s) that can view tickets
     roles = await get_ticket_roles()
-    authorized = [utils.get(guild.roles, id=int(role.value)) for role in roles]
+    authorized = [utils.get(guild.roles, id=role) for role in roles]
     authorized.append(creator)
 
     # Create the text channel within the category
-    overwrites = {role: TICKET_PERMISSIONS for role in roles}
+    overwrites = {role: TICKET_PERMISSIONS for role in authorized}
     overwrites[guild.default_role] = NO_PERMISSIONS
     ticket_channel = await channel_category.create_text_channel(
         f"ticket-{ticket.id}", overwrites=overwrites
@@ -149,13 +142,10 @@ async def create_ticket(
         await db.commit()
 
     # Ping the people for the ticket and instantly delete the message
-    ping_message = " ".join(
-        [
-            entity.mention
-            for i, entity in enumerate(authorized)
-            if type(entity) == Member or roles[i].key == SettingsKey.MentionRole
-        ]
-    )
+    pingable_ids = await CONFIG.mention_role()
+    pingable = [utils.get(guild.roles, id=pid) for pid in pingable_ids]
+    pingable.append(creator)
+    ping_message = " ".join([ping.mention for ping in pingable])
     ping = await ticket_channel.send(ping_message)
     await ping.delete()
 

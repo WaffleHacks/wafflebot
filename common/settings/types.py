@@ -49,4 +49,8 @@ class PostgresDsn(AnyUrl):
     allowed_schemes = {"postgresql+asyncpg"}
 
 
+class RedisDsn(AnyUrl):
+    allowed_schemes = {"redis"}
+
+
 DatabaseUrl = Union[PostgresDsn]

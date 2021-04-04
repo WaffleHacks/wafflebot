@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from .api import ApiSettings
 from .bot import BotSettings
-from .types import DatabaseUrl, DiscordToken
+from .types import DatabaseUrl, DiscordToken, RedisDsn
 
 API_PREFIX = "api_"
 BOT_PREFIX = "bot_"
@@ -16,6 +16,7 @@ class Settings(BaseModel):
 
     database_url: DatabaseUrl
     discord_token: DiscordToken
+    redis_url: RedisDsn
 
 
 def load_settings() -> Settings:

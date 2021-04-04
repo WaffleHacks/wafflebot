@@ -1,10 +1,9 @@
 from discord.ext.commands import check, Context
-from sqlalchemy.future import select
 
-from common.database import get_db, Setting, SettingsKey
+from common import CONFIG, ConfigKey
 
 
-def has_role(*keys: SettingsKey):
+def has_role(*keys: ConfigKey):
     """
     Require the executor to have certain role
     :param keys: the roles to query for
@@ -12,16 +11,13 @@ def has_role(*keys: SettingsKey):
 
     async def predicate(ctx: Context):
         # Find the roles that are required to use the command
-        # TODO: add cache layer?
-        async with get_db() as db:
-            statement = select(Setting).where(Setting.key.in_(keys))
-            result = await db.execute(statement)
-        query_result = result.scalars().all()
-        required_roles = set(map(lambda r: r.value, query_result))
+        result = await CONFIG.get_multiple(*keys)
+        required_roles = set(result)
 
         # Find all roles for a user
-        roles = set(map(lambda r: str(r.id), ctx.author.roles))
+        roles = set(map(lambda r: r.id, ctx.author.roles))
 
+        # Check the intersection
         return len(required_roles & roles) != 0
 
     return check(predicate)

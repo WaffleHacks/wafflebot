@@ -7,7 +7,7 @@ from typing import Any, Dict, Tuple
 
 from common import SETTINGS
 from ..logger import get as get_logger
-from ..permissions import has_role, SettingsKey
+from ..permissions import has_role, ConfigKey
 
 DESCRIPTION = "Register for WaffleHacks services"
 
@@ -69,7 +69,7 @@ class Registration(Cog):
         return response.status, parsed
 
     @command()
-    @has_role(SettingsKey.PanelAccessRole)
+    @has_role(ConfigKey.PanelAccessRole)
     async def register(self, ctx: Context, service: str):
         """
         Register the requester with the specified service

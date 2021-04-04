@@ -5,8 +5,6 @@ from .tables import (
     Message,
     Panel,
     Reaction,
-    Setting,
     Ticket,
     User,
 )
-from .tables.setting import SettingsKey
