@@ -6,15 +6,15 @@ from .base import Base
 
 if TYPE_CHECKING:
     from .reaction import Reaction
-    from .ticket import Ticket
 
 
-class Category(Base):
-    __tablename__ = "categories"
+class Panel(Base):
+    __tablename__ = "panels"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, index=True)
-    name = sqlalchemy.Column(sqlalchemy.String(64), nullable=False)
-    tickets: Mapped[List["Ticket"]] = relationship("Ticket", back_populates="category")
+    message_id = sqlalchemy.Column(sqlalchemy.BigInteger, index=True)
     reactions: Mapped[List["Reaction"]] = relationship(
-        "Reaction", back_populates="category"
+        "Reaction", back_populates="panel"
     )
+    title = sqlalchemy.Column(sqlalchemy.String(256), nullable=False)
+    content = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
