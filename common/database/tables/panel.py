@@ -12,6 +12,7 @@ class Panel(Base):
     __tablename__ = "panels"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, index=True)
+    channel_id = sqlalchemy.Column(sqlalchemy.BigInteger)
     message_id = sqlalchemy.Column(sqlalchemy.BigInteger, index=True)
     reactions: Mapped[List["Reaction"]] = relationship(
         "Reaction", back_populates="panel"
