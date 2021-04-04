@@ -9,6 +9,7 @@ class SettingsKey(Enum):
     PanelAccessRole = 2
     MentionRole = 3
     TicketCategory = 4
+    ArchiveChannel = 5
 
 
 class Setting(Base):

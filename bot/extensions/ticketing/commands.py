@@ -72,7 +72,7 @@ class Ticketing(Cog):
 
         # Close the ticket
         if at is None:
-            await close_ticket(ctx.channel, voice, 0)
+            await close_ticket(ctx.author.id, ctx.channel, voice, 0)
         else:
             # Calculate the seconds to wait
             delta = at - datetime.utcnow()
@@ -83,7 +83,9 @@ class Ticketing(Cog):
                 await ctx.channel.send("Cannot close channel in the past!")
                 return
 
-            self.bot.loop.create_task(close_ticket(ctx.channel, voice, seconds))
+            self.bot.loop.create_task(
+                close_ticket(ctx.author.id, ctx.channel, voice, seconds)
+            )
 
     @command(aliases=["ticket"])
     async def open(self, ctx: Context, *, reason: str = ""):

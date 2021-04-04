@@ -1,3 +1,4 @@
+from datetime import datetime
 import sqlalchemy
 from sqlalchemy.orm import relationship, Mapped
 from typing import List, TYPE_CHECKING
@@ -25,4 +26,7 @@ class Ticket(Base):
     creator: "User" = relationship("User", back_populates="tickets")
     is_open = sqlalchemy.Column(sqlalchemy.Boolean, default=True, nullable=False)
     reason = sqlalchemy.Column(sqlalchemy.String(256), nullable=True)
+    created_at = sqlalchemy.Column(
+        sqlalchemy.DateTime, nullable=True, default=datetime.utcnow()
+    )
     messages: Mapped[List["Message"]] = relationship("Message", back_populates="ticket")

@@ -1,6 +1,8 @@
 import asyncio
+from datetime import datetime
 from discord import (
     utils,
+    AllowedMentions,
     CategoryChannel,
     Guild,
     Member,
@@ -11,15 +13,67 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
 from typing import Optional, Tuple
 
-from common.database import get_db, SettingsKey, Ticket, User
+from common.database import get_db, Setting, SettingsKey, Ticket, User
 from bot import embeds
 from .constants import NO_PERMISSIONS, TICKET_PERMISSIONS
 from .helpers import get_ticket_roles
 
 
-async def close_ticket(text: TextChannel, voice: Optional[VoiceChannel], wait: int):
+async def archive_message(channel: TextChannel, executor_id: int):
+    """
+    Create the archive message
+    :return:
+    """
+    guild = channel.guild
+
+    async with get_db() as db:
+        # Get the archive channel ID
+        result = await db.execute(
+            select(Setting.value).where(Setting.key == SettingsKey.ArchiveChannel)
+        )
+        archive_channel_id = result.scalars().first()
+        if archive_channel_id is None:
+            return
+
+        # Get the ticket from the database
+        result = await db.execute(select(Ticket).where(Ticket.channel_id == channel.id))
+        ticket = result.scalars().first()
+        if ticket is None:
+            return
+
+    # Get the channel
+    archive_channel = guild.get_channel(int(archive_channel_id))
+    if archive_channel is None:
+        return
+
+    # Create the embed
+    embed = embeds.default(guild.me, has_footer=False)
+    embed.title = "Ticket Closed"
+    embed.add_field(name="Ticket ID", value=str(ticket.id), inline=True)
+    embed.add_field(name="Opened By", value=f"<@{ticket.creator_id}>", inline=True)
+    embed.add_field(name="Closed By", value=f"<@{executor_id}>", inline=True)
+    # TODO: implement ticket log
+    embed.add_field(name="Ticket Log", value="Click here", inline=True)
+    embed.add_field(
+        name="Opened At",
+        value=ticket.created_at.strftime("%H:%M:%S %m/%d/%Y (UTC)"),
+        inline=False,
+    )
+    embed.add_field(
+        name="Closed At",
+        value=datetime.utcnow().strftime("%H:%M:%S %m/%d/%Y (UTC)"),
+        inline=False,
+    )
+
+    await archive_channel.send(embed=embed, allowed_mentions=AllowedMentions.none())
+
+
+async def close_ticket(
+    executor_id: int, text: TextChannel, voice: Optional[VoiceChannel], wait: int
+):
     """
     Close a ticket and remove its channel
+    :param executor_id: the id of the person executing the command
     :param text: the discord text channel
     :param voice: an optional discord voice channel
     :param wait: the number of seconds to wait before deleting
@@ -41,6 +95,9 @@ async def close_ticket(text: TextChannel, voice: Optional[VoiceChannel], wait: i
     await text.delete()
     if voice is not None:
         await voice.delete()
+
+    # Send the archive message
+    await archive_message(text, executor_id)
 
 
 async def create_ticket(
