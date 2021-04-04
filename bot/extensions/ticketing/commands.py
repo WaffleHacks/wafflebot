@@ -249,6 +249,10 @@ class Ticketing(Cog):
 
     @Cog.listener()
     async def on_message(self, message: DiscordMessage):
+        # Ignore the message if it doesn't have content
+        if message.content == "":
+            return
+
         # Only work for text channels
         if not isinstance(message.channel, TextChannel):
             return
