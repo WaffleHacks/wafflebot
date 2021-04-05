@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from typing import List
 
-from common.database import get_db, Category, Ticket
+from common.database import get_db, Category, Message, Ticket
 from .categories import router as categories_router
-from .models.tickets import TicketResponse, TicketUpdate
+from .models.tickets import TicketMessage, TicketResponse, TicketUpdate
 
 router = APIRouter()
 router.include_router(
@@ -58,3 +59,20 @@ async def delete(primary_key: int, db: AsyncSession = Depends(get_db)):
         await db.commit()
 
     return {"success": True}
+
+
+@router.get("/{primary_key}/messages", response_model=List[TicketMessage])
+async def messages(primary_key: int, db: AsyncSession = Depends(get_db)):
+    # Get the ticket
+    statement = (
+        select(Ticket)
+        .where(Ticket.id == primary_key)
+        .options(selectinload(Ticket.messages))
+        .options(selectinload(Ticket.messages, Message.sender))
+    )
+    result = await db.execute(statement)
+    ticket = result.scalars().first()
+    if ticket is None:
+        raise HTTPException(status_code=404, detail="not found")
+
+    return ticket.messages
