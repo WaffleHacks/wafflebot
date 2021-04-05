@@ -1,5 +1,6 @@
-from discord import Client, TextChannel
-from fastapi import HTTPException
+from discord import Client, Message, Object, TextChannel
+from discord.errors import NotFound
+from typing import Optional
 
 
 DISCORD = Client()
@@ -12,18 +13,32 @@ def with_discord() -> Client:
     return DISCORD
 
 
-async def get_channel(id_: int) -> TextChannel:
+async def get_channel(id_: int) -> Optional[TextChannel]:
     """
-    Retrieve a channel, ensuring that it exists
+    Retrieve a channel by its ID
     :param id_: the channel's ID
     """
-    channel = await DISCORD.fetch_channel(id_)
-    if channel is None:
-        raise HTTPException(status_code=400, detail="could not find specified channel")
-    elif not isinstance(channel, TextChannel):
-        raise HTTPException(status_code=400, detail="channel must be a text channel")
+    try:
+        channel = await DISCORD.fetch_channel(id_)
+    except NotFound:
+        return None
+    if not isinstance(channel, TextChannel):
+        return None
 
     # Populate the guild
-    channel.guild = await DISCORD.fetch_guild(channel.guild.id)
+    if type(channel.guild) == Object:
+        channel.guild = await DISCORD.fetch_guild(channel.guild.id)
 
     return channel
+
+
+async def get_message(channel: TextChannel, id_: int) -> Optional[Message]:
+    """
+    Retrieve a message by its ID
+    :param channel: the containing channel
+    :param id_: the ID of the message
+    """
+    try:
+        return await channel.fetch_message(id_)
+    except NotFound:
+        return None

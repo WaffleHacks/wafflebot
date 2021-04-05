@@ -1,4 +1,4 @@
-from discord import Embed, TextChannel
+from discord import Embed
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -10,7 +10,7 @@ from common.database import get_db, Panel, Reaction
 from .models import GenericPanel, PanelIn, PanelUpdate, SpecificPanel
 from .reactions import router as reactions_router
 from .utils import validate_emoji
-from ..utils.client import with_discord, Client
+from ..utils.client import get_channel, get_message
 
 router = APIRouter()
 router.include_router(reactions_router, tags=["panels", "reactions"])
@@ -27,7 +27,6 @@ async def list_panels(db: AsyncSession = Depends(get_db)):
 async def create(
     fields: PanelIn,
     db: AsyncSession = Depends(get_db),
-    discord: Client = Depends(with_discord),
 ):
     # Construct the model
     panel = Panel(
@@ -35,11 +34,11 @@ async def create(
     )
 
     # Get the specified channel
-    channel = await discord.fetch_channel(panel.channel_id)
+    channel = await get_channel(panel.channel_id)
     if channel is None:
-        raise HTTPException(status_code=400, detail="could not find specified channel")
-    elif not isinstance(channel, TextChannel):
-        raise HTTPException(status_code=400, detail="channel must be a text channel")
+        raise HTTPException(
+            status_code=400, detail="specified text channel does not exist"
+        )
 
     # Check that the emojis exist
     for reaction in fields.reactions:
@@ -74,7 +73,6 @@ async def create(
 async def read(
     primary_key: int,
     db: AsyncSession = Depends(get_db),
-    discord: Client = Depends(with_discord),
 ):
     # Get the panel and the reactions
     statement = (
@@ -89,7 +87,7 @@ async def read(
         raise HTTPException(status_code=404, detail="not found")
 
     # Get the channel name from the id
-    channel = await discord.fetch_channel(panel.channel_id)
+    channel = await get_channel(panel.channel_id)
     channel_name = channel.name if channel is not None else "<DNE>"
 
     return SpecificPanel(
@@ -106,10 +104,16 @@ async def update(
     primary_key: int,
     fields: PanelUpdate,
     db: AsyncSession = Depends(get_db),
-    discord: Client = Depends(with_discord),
 ):
     # Get the panel
-    panel = await db.get(Panel, primary_key)
+    statement = (
+        select(Panel)
+        .where(Panel.id == primary_key)
+        .options(selectinload(Panel.reactions))
+        .options(selectinload(Panel.reactions, Reaction.category))
+    )
+    result = await db.execute(statement)
+    panel = result.scalars().first()
     if panel is None:
         raise HTTPException(status_code=404, detail="not found")
 
@@ -120,22 +124,18 @@ async def update(
         panel.content = fields.content
     if fields.channel_id is not None:
         # Get the old channel
-        old_channel = await discord.fetch_channel(panel.channel_id)
+        old_channel = await get_channel(panel.channel_id)
         if old_channel is not None:
             # Delete the old message
-            old_message = await old_channel.fetch_message(panel.message_id)
+            old_message = await get_message(old_channel, panel.message_id)
             if old_message is not None:
                 await old_message.delete()
 
         # Get the specified channel
-        channel = await discord.fetch_channel(fields.channel_id)
+        channel = await get_channel(fields.channel_id)
         if channel is None:
             raise HTTPException(
-                status_code=400, detail="could not find specified channel"
-            )
-        elif not isinstance(channel, TextChannel):
-            raise HTTPException(
-                status_code=400, detail="channel must be a text channel"
+                status_code=400, detail="specified text channel does not exist"
             )
 
         # Rebuild and send the message
@@ -150,7 +150,7 @@ async def update(
 
         # Add reactions to the message
         for reaction in panel.reactions:
-            await message.add_reaction(reaction)
+            await message.add_reaction(reaction.emoji)
 
         # Save the ids
         panel.message_id = message.id
@@ -165,12 +165,10 @@ async def update(
         fields.title is not None or fields.content is not None
     ) and fields.channel_id is None:
         # Fetch the channel
-        channel = await discord.fetch_channel(panel.channel_id)
+        channel = await get_channel(panel.channel_id)
         if channel is not None:
-            assert isinstance(channel, TextChannel)
-
             # Fetch the message
-            message = await channel.fetch_message(panel.message_id)
+            message = await get_message(channel, panel.message_id)
             if message is not None:
                 # Update the embed
                 embed = Embed(
@@ -185,20 +183,29 @@ async def update(
 async def delete(
     primary_key: int,
     db: AsyncSession = Depends(get_db),
-    discord: Client = Depends(with_discord),
 ):
     # Get the panel
-    panel = await db.get(Panel, primary_key)
+    statement = (
+        select(Panel)
+        .where(Panel.id == primary_key)
+        .options(selectinload(Panel.reactions))
+        .options(selectinload(Panel.reactions, Reaction.category))
+    )
+    result = await db.execute(statement)
+    panel = result.scalars().first()
 
     # Delete it if it exists
     if panel is not None:
         # Delete the message
-        channel = await discord.fetch_channel(panel.channel_id)
-        assert isinstance(channel, TextChannel)
+        channel = await get_channel(panel.channel_id)
         if channel is not None:
-            message = await channel.fetch_message(panel.message_id)
+            message = await get_message(channel, panel.message_id)
             if message is not None:
                 await message.delete()
+
+        # Delete all the reactions
+        for reaction in panel.reactions:
+            await db.delete(reaction)
 
         await db.delete(panel)
         await db.commit()

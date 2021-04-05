@@ -8,7 +8,7 @@ from typing import List
 from common.database import get_db, Category, Panel, Reaction
 from .models import Reaction as ReactionResponse, ReactionIn, ReactionUpdate
 from .utils import validate_emoji
-from ..utils.client import get_channel
+from ..utils.client import get_channel, get_message
 
 router = APIRouter(prefix="/{panel_id}/reactions")
 
@@ -82,7 +82,7 @@ async def add(
 
     # React with the emoji on the message
     channel = await get_channel(panel.channel_id)
-    message = await channel.fetch_message(panel.message_id)
+    message = await get_message(channel, panel.message_id)
     if message is not None:
         await message.add_reaction(emoji)
 
@@ -126,7 +126,7 @@ async def update(
         emoji = await validate_emoji(channel, fields.emoji)
 
         # Update the reaction
-        message = await channel.fetch_message(panel.message_id)
+        message = await get_message(channel, panel.message_id)
         if message is not None:
             await message.remove_reaction(reaction.emoji, message.author)
             await message.add_reaction(emoji)
@@ -157,7 +157,7 @@ async def remove(panel_id: int, primary_key: int, db: AsyncSession = Depends(get
     if reaction is not None:
         # Get the message for the panel
         channel = await get_channel(panel.channel_id)
-        message = await channel.fetch_message(panel.message_id)
+        message = await get_message(channel, panel.message_id)
 
         # Remove the reaction
         if message is not None:
