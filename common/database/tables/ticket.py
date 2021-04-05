@@ -17,11 +17,15 @@ class Ticket(Base):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, index=True)
     channel_id = sqlalchemy.Column(sqlalchemy.BigInteger, index=True)
     category_id = sqlalchemy.Column(
-        sqlalchemy.Integer, sqlalchemy.ForeignKey("categories.id"), nullable=True
+        sqlalchemy.Integer,
+        sqlalchemy.ForeignKey("categories.id", ondelete="CASCADE"),
+        nullable=True,
     )
     category: "Category" = relationship("Category", back_populates="tickets")
     creator_id = sqlalchemy.Column(
-        sqlalchemy.BigInteger, sqlalchemy.ForeignKey("users.id"), nullable=False
+        sqlalchemy.BigInteger,
+        sqlalchemy.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
     creator: "User" = relationship("User", back_populates="tickets")
     is_open = sqlalchemy.Column(sqlalchemy.Boolean, default=True, nullable=False)

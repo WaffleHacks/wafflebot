@@ -15,11 +15,15 @@ class Message(Base):
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, index=True)
     ticket_id = sqlalchemy.Column(
-        sqlalchemy.Integer, sqlalchemy.ForeignKey("tickets.id"), nullable=False
+        sqlalchemy.Integer,
+        sqlalchemy.ForeignKey("tickets.id", ondelete="CASCADE"),
+        nullable=False,
     )
     ticket: "Ticket" = relationship("Ticket", back_populates="messages")
     sender_id = sqlalchemy.Column(
-        sqlalchemy.BigInteger, sqlalchemy.ForeignKey("users.id"), nullable=False
+        sqlalchemy.BigInteger,
+        sqlalchemy.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
     sender: "User" = relationship("User", back_populates="messages")
     content = sqlalchemy.Column(sqlalchemy.Text, nullable=False)
