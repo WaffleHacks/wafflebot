@@ -1,4 +1,4 @@
-from .engine import get_db
+from .engine import db_context, get_db
 from .tables import (
     CannedResponse,
     Category,

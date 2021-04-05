@@ -1,7 +1,7 @@
 from discord.ext.commands import check, Context
 from sqlalchemy.future import select
 
-from common.database import get_db, Ticket
+from common.database import db_context, Ticket
 from .helpers import get_channel_category
 
 
@@ -19,7 +19,7 @@ def in_ticket():
             return False
 
         # Check that the channel is a ticket
-        async with get_db() as db:
+        async with db_context() as db:
             statement = select(Ticket).where(Ticket.channel_id == ctx.channel.id)
             result = await db.execute(statement)
             if result.scalars().first() is None:

@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 
 from common import CONFIG, ConfigKey
-from common.database import get_db, User
+from common.database import db_context, User
 
 
 async def create_user_if_not_exists(member: Member) -> User:
@@ -12,7 +12,7 @@ async def create_user_if_not_exists(member: Member) -> User:
     :param member: the member
     :return:
     """
-    async with get_db() as db:
+    async with db_context() as db:
         # Construct the user
         user = User(
             id=member.id,

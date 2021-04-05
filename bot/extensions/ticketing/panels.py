@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from bot.logger import get as get_logger
-from common.database import get_db, Panel, Reaction
+from common.database import db_context, Panel, Reaction
 from .helpers import get_channel_category
 from .tickets import create_ticket
 
@@ -41,7 +41,7 @@ class ReactionPanels(Cog):
 
         guild = channel.guild
 
-        async with get_db() as db:
+        async with db_context() as db:
             # Ensure it is a reaction to a channel
             result = await db.execute(
                 select(Panel).where(Panel.message_id == event.message_id)
@@ -82,7 +82,7 @@ class ReactionPanels(Cog):
         await self.bot.wait_until_ready()
 
         # Get all the panels with their reactions
-        async with get_db() as db:
+        async with db_context() as db:
             statement = select(Panel).options(selectinload(Panel.reactions))
             result = await db.execute(statement)
             panels = result.scalars().all()

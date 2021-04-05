@@ -13,7 +13,7 @@ from sqlalchemy.future import select
 from typing import Optional, Tuple
 
 from common import CONFIG
-from common.database import get_db, Ticket
+from common.database import db_context, Ticket
 from bot import embeds
 from .constants import NO_PERMISSIONS, TICKET_PERMISSIONS
 from .helpers import create_user_if_not_exists, get_ticket_roles
@@ -32,7 +32,7 @@ async def archive_message(channel: TextChannel, executor_id: int):
     if archive_channel is None:
         return
 
-    async with get_db() as db:
+    async with db_context() as db:
         # Get the ticket from the database
         result = await db.execute(select(Ticket).where(Ticket.channel_id == channel.id))
         ticket = result.scalars().first()
@@ -74,7 +74,7 @@ async def close_ticket(
     # Wait before deleting the ticket
     await asyncio.sleep(wait)
 
-    async with get_db() as db:
+    async with db_context() as db:
         # Retrieve the ticket from the database
         statement = select(Ticket).where(Ticket.channel_id == text.id)
         result = await db.execute(statement)
@@ -113,7 +113,7 @@ async def create_ticket(
     await create_user_if_not_exists(creator)
 
     # Add the ticket to the database
-    async with get_db() as db:
+    async with db_context() as db:
         ticket = Ticket(
             category_id=category_id,
             creator_id=creator.id,
@@ -136,7 +136,7 @@ async def create_ticket(
     )
 
     # Save the channel id
-    async with get_db() as db:
+    async with db_context() as db:
         ticket.channel_id = ticket_channel.id
         db.add(ticket)
         await db.commit()

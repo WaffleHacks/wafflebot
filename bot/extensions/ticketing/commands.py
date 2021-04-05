@@ -6,7 +6,7 @@ from sqlalchemy.future import select
 from typing import Optional
 
 from common import ConfigKey
-from common.database import get_db, Message, Ticket
+from common.database import db_context, Message, Ticket
 from bot import embeds
 from bot.converters import DateTimeConverter
 from bot.logger import get as get_logger
@@ -205,7 +205,7 @@ class Ticketing(Cog):
         channel_ids = [channel.id for channel in category.channels]
 
         # Mark all tickets as closed that no longer have their channel
-        async with get_db() as db:
+        async with db_context() as db:
             statement = (
                 update(Ticket)
                 .where(Ticket.is_open.is_(True), Ticket.channel_id.not_in(channel_ids))
@@ -269,7 +269,7 @@ class Ticketing(Cog):
         # Ensure the user exists
         await create_user_if_not_exists(message.author)
 
-        async with get_db() as db:
+        async with db_context() as db:
             # Check that the channel is a ticket
             statement = select(Ticket).where(Ticket.channel_id == message.channel.id)
             result = await db.execute(statement)
