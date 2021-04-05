@@ -6,8 +6,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from common import SETTINGS
 from .authentication import router as authentication_router
 from .canned_responses import router as canned_responses_router
+from .panels import router as panel_router
 from .tickets import router as tickets_router
 from .static import router as static_router
+from .utils.client import DISCORD
 from .utils.session import is_logged_in
 
 app = FastAPI(docs_url=None, swagger_ui_oauth2_redirect_url=None, redoc_url="/docs")
@@ -26,6 +28,12 @@ app.include_router(
     dependencies=[Depends(is_logged_in)],
 )
 app.include_router(
+    panel_router,
+    prefix="/panels",
+    tags=["panels"],
+    dependencies=[Depends(is_logged_in)],
+)
+app.include_router(
     tickets_router,
     prefix="/tickets",
     tags=["tickets"],
@@ -41,3 +49,13 @@ async def http_exception_handler(_request: Request, exception: StarletteHTTPExce
         status_code=exception.status_code,
         headers=getattr(exception, "headers", None),
     )
+
+
+@app.on_event("startup")
+async def on_startup():
+    await DISCORD.login(SETTINGS.discord_token)
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    await DISCORD.logout()

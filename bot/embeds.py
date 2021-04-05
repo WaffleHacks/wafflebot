@@ -1,8 +1,8 @@
 from datetime import datetime
-from discord import Color, Embed, Member, User
+from discord import Embed, Member, User
 from typing import List, Tuple, Union
 
-EMBED_COLOR = Color.from_rgb(208, 129, 50)
+from common.constants import EMBED_COLOR
 
 
 def default(author: Union[Member, User], has_footer=True) -> Embed:
