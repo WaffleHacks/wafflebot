@@ -3,11 +3,12 @@ from fastapi.responses import UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
-from common import SETTINGS
+from common import CONFIG, SETTINGS
 from .authentication import router as authentication_router
 from .canned_responses import router as canned_responses_router
 from .panels import router as panel_router
 from .tickets import router as tickets_router
+from .settings import router as settings_router
 from .static import router as static_router
 from .utils.client import DISCORD
 from .utils.session import is_logged_in
@@ -39,6 +40,12 @@ app.include_router(
     tags=["tickets"],
     dependencies=[Depends(is_logged_in)],
 )
+app.include_router(
+    settings_router,
+    prefix="/settings",
+    tags=["settings"],
+    dependencies=[Depends(is_logged_in)],
+)
 app.include_router(static_router, tags=["static"])
 
 
@@ -53,9 +60,11 @@ async def http_exception_handler(_request: Request, exception: StarletteHTTPExce
 
 @app.on_event("startup")
 async def on_startup():
+    await CONFIG.connect()
     await DISCORD.login(SETTINGS.discord_token)
 
 
 @app.on_event("shutdown")
 async def on_shutdown():
+    await CONFIG.disconnect()
     await DISCORD.logout()
