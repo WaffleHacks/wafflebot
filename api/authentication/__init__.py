@@ -55,6 +55,7 @@ async def callback(
             guilds = await response.json()
 
     # Determine if the user has panel
+    # TODO: change to role based permissions
     has_panel = False
     for guild in guilds:
         # Get the field
@@ -91,6 +92,7 @@ async def callback(
     request.session["logged_in"] = True
     request.session["user"] = dict(user_info)
     request.session["token"] = dict(token)
+    request.session["has_panel"] = has_panel
 
     return RedirectResponse("/login/complete")
 

@@ -2,11 +2,11 @@
  * Add the success field if necessary
  * @param content {Object} the JSON response
  * @param response {Response} the resulting response
- * @returns {{data: Object, success: boolean}}
+ * @returns {{data: Object, success: boolean, status: number}}
  */
 function addSuccess(content, response) {
-  if (response.status === 200) return { success: true, data: content };
-  return content;
+  if (response.status === 200) return { success: true, data: content, status: response.status };
+  return { status: response.status, ...content };
 }
 
 export class User {

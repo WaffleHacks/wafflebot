@@ -5,6 +5,9 @@
 </style>
 
 <script>
+  // An error message to be displayed
+  export let message;
+
   // Redirect to server-side login through OAuth
   const redirect = () => (window.location.href = "/authentication/login");
 
@@ -31,6 +34,10 @@
         Discord was unable to process the authorization request. Please try again later.
       {/if}
     </p>
+  {/if}
+
+  {#if message !== ""}
+    <p class="alert alert-danger" style="width: 25%; margin-left: 37.5%" role="alert">{message}</p>
   {/if}
 
   <br/>

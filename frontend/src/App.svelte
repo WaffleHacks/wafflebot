@@ -9,6 +9,8 @@
 	import { Login, LoginComplete } from "./pages/login";
 	import NotFoundPage from "./pages/NotFound.svelte";
 
+	let authMessage = "";
+
 	// Check that the user is logged in
 	onMount(async function() {
 	  // Fetch the user's profile
@@ -16,7 +18,10 @@
 
 	  // TODO: update eslint to fix improper indentation
 	  if (content.success) user.set(content.data);
-	  else redirect("/login");
+	  else {
+	  	if (content.status === 403) authMessage = "You do not have permissions to access the panel!";
+	  	redirect("/login");
+	  }
 	});
 </script>
 
@@ -27,7 +32,7 @@
 		<Route path="/canned-responses" component={CannedResponses}/>
 
 		<!-- Authentication routes -->
-		<Route path="/login" component={Login} layout={false}/>
+		<Route path="/login" component={Login} layout={false} message={authMessage}/>
 		<Route path="/login/complete" component={LoginComplete} layout={false}/>
 
 		<!-- Catch all -->

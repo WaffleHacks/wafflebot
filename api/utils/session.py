@@ -25,6 +25,10 @@ async def is_logged_in(session=Depends(get_session)) -> Dict:
     if time.time() > expiration:
         raise HTTPException(status_code=401, detail="unauthorized")
 
+    # Check that the user has panel access
+    if not session.get("has_panel"):
+        raise HTTPException(status_code=403, detail="forbidden")
+
     return session
 
 
