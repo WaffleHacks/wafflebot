@@ -1,3 +1,4 @@
+from aioredis import Redis
 import asyncio
 from datetime import datetime
 from discord import (
@@ -62,7 +63,11 @@ async def archive_message(channel: TextChannel, executor_id: int):
 
 
 async def close_ticket(
-    executor_id: int, text: TextChannel, voice: Optional[VoiceChannel], wait: int
+    executor_id: int,
+    text: TextChannel,
+    voice: Optional[VoiceChannel],
+    wait: int,
+    redis: Redis,
 ):
     """
     Close a ticket and remove its channel
@@ -70,6 +75,7 @@ async def close_ticket(
     :param text: the discord text channel
     :param voice: an optional discord voice channel
     :param wait: the number of seconds to wait before deleting
+    :param redis: the redis connection
     """
     # Wait before deleting the ticket
     await asyncio.sleep(wait)
@@ -91,6 +97,9 @@ async def close_ticket(
 
     # Send the archive message
     await archive_message(text, executor_id)
+
+    # Notify that the message was closed
+    await redis.publish_json(f"ticket|{ticket.id}", {"action": "close"})
 
 
 async def create_ticket(

@@ -1,9 +1,14 @@
+import aioredis
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.websockets import WebSocket, WebSocketDisconnect
+import json
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from typing import List
+from websockets.exceptions import ConnectionClosed
 
+from common import SETTINGS
 from common.database import get_db, Category, Message, Ticket
 from .categories import router as categories_router
 from .models.tickets import TicketMessage, TicketResponse, TicketUpdate
@@ -76,3 +81,45 @@ async def messages(primary_key: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="not found")
 
     return ticket.messages
+
+
+@router.websocket("/{primary_key}/messages/ws")
+async def messages_stream(
+    ws: WebSocket, primary_key: int, db: AsyncSession = Depends(get_db)
+):
+    # Accept the connection
+    await ws.accept()
+
+    # Ensure the ticket exists
+    statement = select(Ticket).where(Ticket.id == primary_key)
+    result = await db.execute(statement)
+    ticket = result.scalars().first()
+    if ticket is None:
+        await ws.send_json({"success": False, "reason": "not found", "code": 1008})
+        await ws.close(1009)
+        return
+    elif not ticket.is_open:
+        await ws.send_json({"success": False, "reason": "ticket closed", "code": 1008})
+        await ws.close(1009)
+        return
+
+    # Connect to redis and subscribe to the channel
+    redis = await aioredis.create_redis_pool(SETTINGS.redis_url)
+    (channel,) = await redis.subscribe(f"ticket|{primary_key}")
+
+    try:
+        # Accept and re-broadcast the messages
+        async for message in channel.iter(encoding="utf-8", decoder=json.loads):
+            # Re-broadcast the message
+            await ws.send_json(message)
+
+            # Check if the connection should be closed
+            if message.get("action") == "close":
+                await ws.close(1000)
+    except ConnectionClosed:
+        pass
+
+    # Disconnect from redis
+    await redis.unsubscribe(channel)
+    redis.close()
+    await redis.wait_closed()

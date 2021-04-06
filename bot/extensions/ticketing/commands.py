@@ -1,3 +1,5 @@
+import aioredis
+from asyncio import Event
 from datetime import datetime
 from discord import utils, Member, Message as DiscordMessage, TextChannel
 from discord.ext.commands import command, Bot, Cog, Context
@@ -5,7 +7,7 @@ from sqlalchemy import update
 from sqlalchemy.future import select
 from typing import Optional
 
-from common import ConfigKey
+from common import ConfigKey, SETTINGS
 from common.database import db_context, Message, Ticket
 from bot import embeds
 from bot.converters import DateTimeConverter
@@ -27,10 +29,42 @@ class Ticketing(Cog):
         self.logger = get_logger("extensions.ticketing")
         self.bot = bot
 
+        # Connect to redis
+        self.pool: Optional[aioredis.Redis] = None
+        self.pool_set = Event()
+        self.bot.loop.create_task(self.__redis_connect())
+
         self.logger.info("loaded ticketing commands")
 
     def cog_unload(self):
+        self.bot.loop.create_task(self.__redis_disconnect())
         self.logger.info("unloaded ticketing commands")
+
+    async def __redis_connect(self):
+        self.pool = await aioredis.create_redis_pool(SETTINGS.redis_url)
+        self.pool_set.set()
+
+    async def __redis_disconnect(self):
+        self.pool.close()
+        await self.pool.wait_closed()
+
+    async def notify_action(self, name: str, action: str, **kwargs):
+        """
+        Notify that an action occurred
+        :param name: the channel name
+        :param action: the action that occurred
+        """
+        # Get the channel id from the name
+        parts = name.split("-")
+        try:
+            ticket_id = int(parts[-1])
+        except ValueError:
+            return
+
+        # Publish the message
+        await self.pool.publish_json(
+            f"ticket|{ticket_id}", {"action": action, **kwargs}
+        )
 
     @command()
     @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
@@ -60,6 +94,13 @@ class Ticketing(Cog):
             )
         )
 
+        # Publish the action
+        await self.notify_action(
+            ctx.channel.name,
+            "add",
+            user=f"{ctx.author.name}#{ctx.author.discriminator}",
+        )
+
     @command()
     @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
     @in_ticket()
@@ -74,7 +115,7 @@ class Ticketing(Cog):
 
         # Close the ticket
         if at is None:
-            await close_ticket(ctx.author.id, ctx.channel, voice, 0)
+            await close_ticket(ctx.author.id, ctx.channel, voice, 0, self.pool)
         else:
             # Calculate the seconds to wait
             delta = at - datetime.utcnow()
@@ -85,8 +126,9 @@ class Ticketing(Cog):
                 await ctx.channel.send("Cannot close channel in the past!")
                 return
 
+            # TODO: add persistence for timed closing
             self.bot.loop.create_task(
-                close_ticket(ctx.author.id, ctx.channel, voice, seconds)
+                close_ticket(ctx.author.id, ctx.channel, voice, seconds, self.pool)
             )
 
     @command(aliases=["ticket"])
@@ -168,6 +210,13 @@ class Ticketing(Cog):
             )
         )
 
+        # Publish the action
+        await self.notify_action(
+            ctx.channel.name,
+            "remove",
+            user=f"{ctx.author.name}#{ctx.author.discriminator}",
+        )
+
     @command()
     @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
     @in_ticket()
@@ -188,6 +237,9 @@ class Ticketing(Cog):
 
         # Rename the channel
         await ctx.channel.edit(name=formatted)
+
+        # Publish the action
+        await self.notify_action(ctx.channel.name, "rename", new_name=formatted)
 
     @command()
     @has_role(ConfigKey.PanelAccessRole)
@@ -247,8 +299,14 @@ class Ticketing(Cog):
             )
         )
 
+        # Publish the action
+        await self.notify_action(ctx.channel.name, "voice")
+
     @Cog.listener()
     async def on_message(self, message: DiscordMessage):
+        # Wait until redis is defined
+        await self.pool_set.wait()
+
         # Ignore the message if it doesn't have content
         if message.content == "":
             return
@@ -287,3 +345,13 @@ class Ticketing(Cog):
 
             # Save the changes
             await db.commit()
+
+        # Notify of the new message
+        await self.pool.publish_json(
+            f"ticket|{ticket.id}",
+            {
+                "author": f"{message.author.name}#{message.author.discriminator}",
+                "avatar": str(message.author.avatar_url),
+                "message": message.content,
+            },
+        )
