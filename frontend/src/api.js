@@ -15,7 +15,7 @@ export class User {
    * @returns {Promise<{data: Object, success: boolean}>}
    */
   static async info(signal = undefined) {
-    const response = await fetch("/authentication/me", { signal });
+    const response = await fetch("/api/authentication/me", { signal });
     const content = await response.json();
     return addSuccess(content, response);
   }
@@ -24,7 +24,7 @@ export class User {
    * Logout the user
    */
   static async logout(signal = undefined) {
-    await fetch("/authentication/logout", { signal });
+    await fetch("/api/authentication/logout", { signal });
   }
 }
 
@@ -34,7 +34,7 @@ export class CannedResponse {
    * @returns {Promise<{data: Object, success: boolean}>}
    */
   static async list() {
-    const response = await fetch("/canned-responses/");
+    const response = await fetch("/api/canned-responses/");
     const content = await response.json();
     return addSuccess(content, response);
   }
@@ -48,7 +48,7 @@ export class CannedResponse {
    * @returns {Promise<{data: Object, success: boolean}>}
    */
   static async create(key, title, content, fields = {}) {
-    const response = await fetch("/canned-responses/", {
+    const response = await fetch("/api/canned-responses/", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
@@ -68,7 +68,7 @@ export class CannedResponse {
    * @returns {Promise<{data: Object, success: boolean}>}
    */
   static async update(id, key, title, content, fields = {}) {
-    const response = await fetch(`/canned-responses/${id}`, {
+    const response = await fetch(`/api/canned-responses/${id}`, {
       method: "PUT",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
@@ -84,7 +84,7 @@ export class CannedResponse {
    * @returns {Promise<boolean>}
    */
   static async delete(id) {
-    const response = await fetch(`/canned-responses/${id}`, { method: "DELETE" });
+    const response = await fetch(`/api/canned-responses/${id}`, { method: "DELETE" });
     return response.status === 200;
   }
 }
