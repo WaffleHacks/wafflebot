@@ -1,9 +1,12 @@
+from aiohttp import ClientSession
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse, Response, URL
 from typing import Dict, Optional
 
+from common import SETTINGS
+from common.constants import MANAGE_SERVER_PERMISSIONS
 from common.database import get_db, User
 from .models import UserInfo
 from .oauth import get_discord_client
@@ -43,9 +46,31 @@ async def callback(
     client.token = token
     user_info = await client.userinfo(token=token)
 
+    # Get all the user's guilds
+    async with ClientSession() as session:
+        async with session.get(
+            "https://discord.com/api/v8/users/@me/guilds",
+            headers={"Authorization": f"Bearer {token['access_token']}"},
+        ) as response:
+            guilds = await response.json()
+
     # Determine if the user has panel
-    # TODO: implement roles API call
-    has_panel = True
+    has_panel = False
+    for guild in guilds:
+        # Get the field
+        name = guild.get("name")
+        is_owner = guild.get("owner")
+        permissions = int(guild.get("permissions"))
+
+        # Ignore servers that don't match this name
+        if name != SETTINGS.api.guild_name:
+            continue
+
+        # Set the panel
+        has_panel = (
+            is_owner
+            or permissions & MANAGE_SERVER_PERMISSIONS == MANAGE_SERVER_PERMISSIONS
+        )
 
     # Save the user's info to the database
     user = User(
