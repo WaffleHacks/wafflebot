@@ -40,8 +40,8 @@ async def on_error(ctx: Context, exception: Exception):
         formatted = str(exception)
         arg_separator = formatted.index(" ")
         await ctx.channel.send(
-            f"`{formatted[:arg_separator]}`{formatted[:arg_separator]}"
-            f" Use `.help {ctx.command.qualified_name}` for usage information"
+            f"`{formatted[:arg_separator]}`{formatted[arg_separator:]}"
+            f" Use `{ctx.bot.command_prefix}help {ctx.command.qualified_name}` for usage information"
         )
 
     else:
