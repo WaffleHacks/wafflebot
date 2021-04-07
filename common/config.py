@@ -10,7 +10,7 @@ NOT_CONNECTED = RuntimeError(
 class ConfigKey(Enum):
     ManagementRole = "management_role"
     PanelAccessRole = "panel_access_role"
-    MentionRole = "mention_role"
+    MentionRoles = "mention_roles"
     TicketCategory = "ticket_category"
     ArchiveChannel = "archive_channel"
 
@@ -19,7 +19,7 @@ class ConfigKey(Enum):
         """
         The keys to not autogenerate getters/setters for
         """
-        return [ConfigKey.MentionRole]
+        return [ConfigKey.MentionRoles]
 
 
 class Config(object):
@@ -107,17 +107,17 @@ class Config(object):
 
         return result
 
-    async def mention_role(self) -> List[int]:
+    async def mention_roles(self) -> List[int]:
         """
         Get all the mentionable roles
         """
         self.__check_connected()
 
         # Get all the set members
-        raw = await self._pool.smembers(ConfigKey.MentionRole.name)
+        raw = await self._pool.smembers(ConfigKey.MentionRoles.name)
         return list(map(int, raw))
 
-    async def set_mention_role(self, value: Union[int, List[int], Set[int]]):
+    async def set_mention_roles(self, value: Union[int, List[int], Set[int]]):
         """
         Set the mentionable roles
         :param value: the value(s) to set
@@ -129,12 +129,12 @@ class Config(object):
             value = [value]
 
         # Delete the old values
-        await self._pool.delete(ConfigKey.MentionRole.name)
+        await self._pool.delete(ConfigKey.MentionRoles.name)
 
         # Set the new values
-        await self._pool.sadd(ConfigKey.MentionRole.name, *value)
+        await self._pool.sadd(ConfigKey.MentionRoles.name, *value)
 
-    async def add_mention_role(self, value: Union[int, List[int], Set[int]]):
+    async def add_mention_roles(self, value: Union[int, List[int], Set[int]]):
         """
         Add a mentionable role
         :param value: the value(s) to add
@@ -147,9 +147,9 @@ class Config(object):
             value = [value]
 
         # Add the value(s)
-        await self._pool.sadd(ConfigKey.MentionRole.name, *value)
+        await self._pool.sadd(ConfigKey.MentionRoles.name, *value)
 
-    async def remove_mention_role(self, value: Union[int, List[int], Set[int]]):
+    async def remove_mention_roles(self, value: Union[int, List[int], Set[int]]):
         """
         Remove one or more mentionable roles
         :param value: the value(s) to remove
@@ -161,4 +161,4 @@ class Config(object):
         if isinstance(value, int):
             value = [value]
 
-        await self._pool.srem(ConfigKey.MentionRole.name, *value)
+        await self._pool.srem(ConfigKey.MentionRoles.name, *value)

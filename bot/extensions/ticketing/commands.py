@@ -67,7 +67,7 @@ class Ticketing(Cog):
         )
 
     @command()
-    @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
+    @has_role(ConfigKey.MentionRoles, ConfigKey.PanelAccessRole)
     @in_ticket()
     async def add(self, ctx: Context, user: Member):
         """
@@ -102,7 +102,7 @@ class Ticketing(Cog):
         )
 
     @command()
-    @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
+    @has_role(ConfigKey.MentionRoles, ConfigKey.PanelAccessRole)
     @in_ticket()
     async def close(self, ctx: Context, *, at: Optional[DateTimeConverter]):
         """
@@ -174,7 +174,7 @@ class Ticketing(Cog):
         await ctx.channel.send(embed=embed)
 
     @command()
-    @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
+    @has_role(ConfigKey.MentionRoles, ConfigKey.PanelAccessRole)
     @in_ticket()
     async def remove(self, ctx: Context, user: Member):
         """
@@ -218,7 +218,7 @@ class Ticketing(Cog):
         )
 
     @command()
-    @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
+    @has_role(ConfigKey.MentionRoles, ConfigKey.PanelAccessRole)
     @in_ticket()
     async def rename(self, ctx: Context, *, name: str):
         """
@@ -278,7 +278,7 @@ class Ticketing(Cog):
         await ctx.channel.send(embed=message)
 
     @command()
-    @has_role(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
+    @has_role(ConfigKey.MentionRoles, ConfigKey.PanelAccessRole)
     @in_ticket()
     async def voice(self, ctx: Context):
         """

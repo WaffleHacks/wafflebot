@@ -151,7 +151,7 @@ async def create_ticket(
         await db.commit()
 
     # Ping the people for the ticket and instantly delete the message
-    pingable_ids = await CONFIG.mention_role()
+    pingable_ids = await CONFIG.mention_roles()
     pingable = [utils.get(guild.roles, id=pid) for pid in pingable_ids]
     pingable.append(creator)
     ping_message = " ".join([ping.mention for ping in pingable])

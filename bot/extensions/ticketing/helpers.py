@@ -50,4 +50,4 @@ async def get_ticket_roles() -> List[int]:
     """
     Get a list of the roles that can view a ticket
     """
-    return await CONFIG.get_multiple(ConfigKey.MentionRole, ConfigKey.PanelAccessRole)
+    return await CONFIG.get_multiple(ConfigKey.MentionRoles, ConfigKey.PanelAccessRole)
