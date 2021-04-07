@@ -38,10 +38,14 @@ def message(content) -> Embed:
 
 
 def help_(
-    author: Union[Member, User], name: str, explanations: List[Tuple[str, str]]
+    prefix: str,
+    author: Union[Member, User],
+    name: str,
+    explanations: List[Tuple[str, str]],
 ) -> Embed:
     """
     Generate a help embed for a command group
+    :param prefix: the command prefix
     :param author: the command issuer
     :param name: the name of the command group
     :param explanations: a list of commands and their descriptions
@@ -53,10 +57,12 @@ def help_(
     embed.title = f"{name.capitalize()} Help"
 
     # Add the help field
-    embed.add_field(name=f"`.{name}`", value="display this help message", inline=False)
+    embed.add_field(
+        name=f"`{prefix}{name}`", value="display this help message", inline=False
+    )
 
     # Add the explanations
     for command, explanation in explanations:
-        embed.add_field(name=f"`{command}`", value=explanation, inline=False)
+        embed.add_field(name=f"`{prefix}{command}`", value=explanation, inline=False)
 
     return embed

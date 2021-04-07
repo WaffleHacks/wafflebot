@@ -28,16 +28,17 @@ async def management(ctx: Context):
     if ctx.invoked_subcommand is None:
         await ctx.channel.send(
             embed=embeds.help_(
+                ctx.bot.command_prefix,
                 ctx.author,
                 "management",
                 [
-                    (".management enable <package>", "enable an extension"),
+                    ("management enable <package>", "enable an extension"),
                     (
-                        ".management reload <package>",
+                        "management reload <package>",
                         "disable and re-enable an extension",
                     ),
-                    (".management disable <package>", "disable an extension"),
-                    (".management list", "list all the enabled extensions"),
+                    ("management disable <package>", "disable an extension"),
+                    ("management list", "list all the enabled extensions"),
                 ],
             )
         )
