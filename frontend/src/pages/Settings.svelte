@@ -13,13 +13,7 @@
   async function refresh() {
     const content = await Settings.list();
     if (!content.success) redirect("/login");
-    else settings = content.data.map(setting => {
-      // Convert the integers to strings for easy text input
-      if (Array.isArray(setting.value)) setting.value = setting.value.map(v => v.toString());
-      else setting.value = setting.value.toString();
-
-      return setting;
-    });
+    else settings = content.data;
   }
 
   // Update a value
