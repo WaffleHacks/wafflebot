@@ -1,6 +1,5 @@
 import aioredis
 from enum import Enum
-import re
 from typing import List, Optional, Set, Union
 
 NOT_CONNECTED = RuntimeError(
@@ -21,17 +20,6 @@ class ConfigKey(Enum):
         The keys to not autogenerate getters/setters for
         """
         return [ConfigKey.MentionRole]
-
-    def snake_case(self) -> str:
-        """
-        Convert the name to snake case
-        :return:
-        """
-        # Split the name on capitals
-        split = filter(None, re.split(r"([A-Z][a-z]*)", self.name))
-
-        # Join with underscores and make it lowercase
-        return "_".join(split).lower()
 
 
 class Config(object):
