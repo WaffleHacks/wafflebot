@@ -10,11 +10,5 @@ class SettingResponse(BaseModel):
     value: Union[List[int], int]
 
 
-class UpdateAction(Enum):
-    Add = "add"
-    Remove = "remove"
-
-
 class SettingUpdate(BaseModel):
-    action: Optional[UpdateAction]
     value: Union[List[int], int]

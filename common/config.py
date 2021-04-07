@@ -129,6 +129,23 @@ class Config(object):
         raw = await self._pool.smembers(ConfigKey.MentionRole.name)
         return list(map(int, raw))
 
+    async def set_mention_role(self, value: Union[int, List[int], Set[int]]):
+        """
+        Set the mentionable roles
+        :param value: the value(s) to set
+        """
+        self.__check_connected()
+
+        # Make the value a list if it isn't already
+        if isinstance(value, int):
+            value = [value]
+
+        # Delete the old values
+        await self._pool.delete(ConfigKey.MentionRole.name)
+
+        # Set the new values
+        await self._pool.sadd(ConfigKey.MentionRole.name, *value)
+
     async def add_mention_role(self, value: Union[int, List[int], Set[int]]):
         """
         Add a mentionable role
