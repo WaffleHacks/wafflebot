@@ -88,3 +88,32 @@ export class CannedResponse {
     return response.status === 200;
   }
 }
+
+export class Settings {
+  /**
+   * List all the settings
+   * @returns {Promise<{data: Object, success: boolean, status: number}>}
+   */
+  static async list() {
+    const response = await fetch("/api/settings/");
+    const data = await response.json();
+    return addSuccess(data, response);
+  }
+
+  /**
+   * Modify a setting parameter
+   * @param key {string} the setting key
+   * @param value {number} the new value
+   * @returns {Promise<{data: Object, success: boolean, status: number}>}
+   */
+  static async update(key, value) {
+    const response = await fetch(`/api/settings/${key}`, {
+      method: "PUT",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value }),
+    });
+    const data = await response.json();
+    return addSuccess(data, response);
+  }
+}

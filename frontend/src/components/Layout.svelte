@@ -66,6 +66,11 @@
           icon: "mail",
           name: "Canned Responses",
           to: "/canned-responses",
+        },
+        {
+          icon: "settings",
+          name: "Settings",
+          to: "/settings",
         }
       ],
     },

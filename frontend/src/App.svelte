@@ -8,6 +8,7 @@
 	import Home from "./pages/Home.svelte";
 	import { Login, LoginComplete } from "./pages/login";
 	import NotFoundPage from "./pages/NotFound.svelte";
+	import Settings from "./pages/Settings.svelte";
 
 	let authMessage = "";
 
@@ -30,6 +31,7 @@
 		<Route component={Home}/>
 
 		<Route path="/canned-responses" component={CannedResponses}/>
+		<Route path="/settings" component={Settings}/>
 
 		<!-- Authentication routes -->
 		<Route path="/login" component={Login} layout={false} message={authMessage}/>
