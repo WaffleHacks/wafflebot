@@ -106,11 +106,6 @@
   <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
-  <ul class="navbar-nav px-3">
-    <li class="nav-item text-nowrap">
-      <button class="nav-link btn btn-link" on:click={onLogout}>Log out</button>
-    </li>
-  </ul>
 </header>
 
 <div class="container-fluid">
@@ -131,6 +126,14 @@
                 </a>
               </li>
             {/each}
+            {#if title === "General"}
+              <li class="nav-item">
+                <button class="nav-link btn btn-link" on:click={onLogout}>
+                  {@html icons['log-out'].toSvg(SVG_ATTRS)}
+                  Log out
+                </button>
+              </li>
+            {/if}
           </ul>
         {/each}
       </div>
