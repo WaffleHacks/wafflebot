@@ -85,7 +85,7 @@
         {
           icon: "list",
           name: "Categories",
-          to: "/tickets/categories",
+          to: "/categories",
         }
       ],
     }
