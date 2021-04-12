@@ -295,7 +295,7 @@ class Ticketing(Cog):
         # Notify of the new channel
         await ctx.channel.send(
             embed=embeds.message(
-                f":white_check_mark: Successfully create your voice channel! {channel.mention}"
+                f":white_check_mark: Successfully create your voice channel! <#{channel.id}>"
             )
         )
 
