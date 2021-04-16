@@ -32,6 +32,14 @@ async def create(category: CategoryIn, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=409, detail="field 'name' must be unique")
 
 
+@router.get("/{primary_key}", response_model=CategoryResponse)
+async def read(primary_key: int, db: AsyncSession = Depends(get_db)):
+    category = await db.get(Category, primary_key)
+    if category is None:
+        raise HTTPException(status_code=404, detail="not found")
+    return category
+
+
 @router.put("/{primary_key}", response_model=CategoryResponse)
 async def update(
     primary_key: int, fields: CategoryUpdate, db: AsyncSession = Depends(get_db)
