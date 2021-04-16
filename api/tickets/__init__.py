@@ -5,7 +5,7 @@ import json
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from typing import List
+from typing import List, Optional
 from websockets.exceptions import ConnectionClosed
 
 from common import SETTINGS
@@ -20,8 +20,10 @@ router.include_router(
 
 
 @router.get("/", response_model=List[TicketResponse])
-async def list_tickets(db: AsyncSession = Depends(get_db)):
-    statement = select(Ticket)
+async def list_tickets(
+    category: Optional[int] = None, db: AsyncSession = Depends(get_db)
+):
+    statement = select(Ticket).where(Ticket.category_id == category)
     result = await db.execute(statement)
     return result.scalars().all()
 
