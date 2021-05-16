@@ -1,0 +1,14 @@
+[[deploy]]
+action = "command"
+command = "/etc/poetry/bin/poetry"
+args = ["run", "python", "manage.py", "migrations", "run"]
+
+[[deploy]]
+action = "command"
+command = "systemctl"
+args = ["restart", "wafflebot-web.service"]
+
+[[deploy]]
+action = "command"
+command = "systemctl"
+args = ["restart", "wafflebot-bot.service"]
