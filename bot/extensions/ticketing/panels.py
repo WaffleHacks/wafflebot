@@ -37,7 +37,6 @@ class ReactionPanels(Cog):
         # Remove the user's reaction, regardless as to whether it is valid
         channel = await self.bot.fetch_channel(event.channel_id)
         message = await channel.fetch_message(event.message_id)
-        await message.remove_reaction(event.emoji, event.member)
 
         guild = channel.guild
 
@@ -49,6 +48,8 @@ class ReactionPanels(Cog):
             panel = result.scalars().first()
             if panel is None:
                 return
+
+            await message.remove_reaction(event.emoji, event.member)
 
             # Ensure the reaction is one of the pre-determined ones
             result = await db.execute(
