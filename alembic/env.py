@@ -28,6 +28,12 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+database_url = (
+    environ.get("DATABASE_URL", "")
+    .replace("postgres://", "postgresql+asyncpg://")
+    .replace("postgresql://", "postgresql+asyncpg://")
+)
+
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -41,9 +47,8 @@ def run_migrations_offline():
     script output.
 
     """
-    url = environ.get("DATABASE_URL")
     context.configure(
-        url=url,
+        url=database_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -69,7 +74,7 @@ async def run_migrations_online():
 
     """
     cfg = config.get_section(config.config_ini_section)
-    cfg["sqlalchemy.url"] = environ.get("DATABASE_URL")
+    cfg["sqlalchemy.url"] = database_url
 
     connectable = AsyncEngine(
         engine_from_config(
