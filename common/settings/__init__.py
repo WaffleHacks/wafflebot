@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from .api import ApiSettings
 from .bot import BotSettings
-from .types import DatabaseUrl, DiscordToken, RedisDsn
+from .types import DiscordToken, PostgresDsn, RedisDsn
 
 API_PREFIX = "api_"
 BOT_PREFIX = "bot_"
@@ -16,7 +16,7 @@ class Settings(BaseModel):
 
     full_errors: bool = False
 
-    database_url: DatabaseUrl
+    database_url: PostgresDsn
     discord_token: DiscordToken
     redis_url: RedisDsn
 

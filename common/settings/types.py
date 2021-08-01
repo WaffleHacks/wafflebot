@@ -1,6 +1,6 @@
 from pydantic import AnyUrl
 import re
-from typing import Union
+from typing import Optional, no_type_check
 
 DISCORD_TOKEN_REGEX = re.compile(r"^\w{24}\.\w{6}\.\w{27}$")
 DISCORD_CLIENT_SECRET_REGEX = re.compile(r"^[a-zA-Z0-9-]{32}$")
@@ -34,7 +34,7 @@ class DiscordClientSecret(str):
 
     @classmethod
     def __modify_schema__(cls, field_schema):
-        field_schema.update(patter=DISCORD_CLIENT_SECRET_REGEX.pattern)
+        field_schema.update(pattern=DISCORD_CLIENT_SECRET_REGEX.pattern)
 
     @classmethod
     def validate(cls, v):
@@ -46,11 +46,16 @@ class DiscordClientSecret(str):
 
 
 class PostgresDsn(AnyUrl):
-    allowed_schemes = {"postgresql+asyncpg"}
+    allowed_schemes = {"postgresql+asyncpg", "postgres", "postgresql"}
+    user_required = True
+
+    @no_type_check
+    def __new__(cls, url: Optional[str], **kwargs) -> object:
+        normalized = url.replace("postgresql://", "postgresql+asyncpg://").replace(
+            "postgres://", "postgresql+asyncpg://"
+        )
+        return super(PostgresDsn, cls).__new__(cls, normalized, **kwargs)
 
 
 class RedisDsn(AnyUrl):
     allowed_schemes = {"redis"}
-
-
-DatabaseUrl = Union[PostgresDsn]
