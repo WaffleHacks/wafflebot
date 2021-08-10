@@ -89,61 +89,6 @@ export class CannedResponse {
   }
 }
 
-export class Categories {
-  /**
-   * Get a list of all the categories
-   * @returns {Promise<{data: Object, success: boolean}>}
-   */
-  static async list() {
-    const response = await fetch("/api/tickets/categories/");
-    const content = await response.json();
-    return addSuccess(content, response);
-  }
-
-  /**
-   * Create a category
-   * @param name {string} the name of the category
-   * @returns {Promise<{data: Object, success: boolean}>}
-   */
-  static async create(name) {
-    const response = await fetch("/api/tickets/categories/", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    const data = await response.json();
-    return addSuccess(data, response);
-  }
-
-  /**
-   * Modify a category
-   * @param id {number} the primary key
-   * @param name {string} the new name for the category
-   * @returns {Promise<{data: Object, success: boolean}>}
-   */
-  static async update(id, name) {
-    const response = await fetch(`/api/tickets/categories/${id}`, {
-      method: "PUT",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    const data = await response.json();
-    return addSuccess(data, response);
-  }
-
-  /**
-   * Delete a category
-   * @param id {number} the primary key
-   * @returns {Promise<boolean>}
-   */
-  static async delete(id) {
-    const response = await fetch(`/api/tickets/categories/${id}`, { method: "DELETE" });
-    return response.status === 200;
-  }
-}
-
 export class Settings {
   /**
    * List all the settings

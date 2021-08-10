@@ -5,7 +5,6 @@
 	import { user } from "./stores";
 
 	import CannedResponses from "./pages/CannedResponses.svelte";
-	import Categories from "./pages/Categories.svelte";
 	import Home from "./pages/Home.svelte";
 	import { Login, LoginComplete } from "./pages/login";
 	import NotFoundPage from "./pages/NotFound.svelte";
@@ -33,9 +32,6 @@
 		<Route component={Home}/>
 		<Route path="/canned-responses" component={CannedResponses}/>
 		<Route path="/settings" component={Settings}/>
-
-		<!-- Tickets routes -->
-		<Route path="/categories" component={Categories}/>
 
 		<!-- Authentication routes -->
 		<Route path="/login" component={Login} layout={false} message={authMessage}/>

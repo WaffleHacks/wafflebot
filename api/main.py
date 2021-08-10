@@ -6,8 +6,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from common import CONFIG, SETTINGS
 from .authentication import router as authentication_router
 from .canned_responses import router as canned_responses_router
-from .panels import router as panel_router
-from .tickets import router as tickets_router
 from .settings import router as settings_router
 from .static import router as static_router
 from .utils.client import DISCORD
@@ -27,18 +25,6 @@ api.include_router(
     canned_responses_router,
     prefix="/canned-responses",
     tags=["canned-responses"],
-    dependencies=[Depends(is_logged_in)],
-)
-api.include_router(
-    panel_router,
-    prefix="/panels",
-    tags=["panels"],
-    dependencies=[Depends(is_logged_in)],
-)
-api.include_router(
-    tickets_router,
-    prefix="/tickets",
-    tags=["tickets"],
     dependencies=[Depends(is_logged_in)],
 )
 api.include_router(

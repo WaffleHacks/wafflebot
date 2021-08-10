@@ -63,11 +63,6 @@
           to: "/",
         },
         {
-          icon: "mail",
-          name: "Canned Responses",
-          to: "/canned-responses",
-        },
-        {
           icon: "settings",
           name: "Settings",
           to: "/settings",
@@ -75,20 +70,15 @@
       ],
     },
     {
-      title: "Ticketing",
+      title: "Utilities",
       links: [
         {
-          icon: "layers",
-          name: "Tickets",
-          to: "/tickets",
+          icon: "mail",
+          name: "Canned Responses",
+          to: "/canned-responses",
         },
-        {
-          icon: "list",
-          name: "Categories",
-          to: "/categories",
-        }
       ],
-    }
+    },
   ];
 
   // Logout the current user
