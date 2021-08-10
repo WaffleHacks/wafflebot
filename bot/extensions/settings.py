@@ -194,18 +194,6 @@ async def settings(ctx: Context):
                         "settings panel-access-role <get|set> [role]",
                         "modify the roles which have access to the panel",
                     ),
-                    (
-                        "settings mention-roles <get|set|remove|add> [role(s)]",
-                        "modify the mentioned roles when a ticket is opened",
-                    ),
-                    (
-                        "settings ticket-category <get|set> [category]",
-                        "modify the category that the tickets are under",
-                    ),
-                    (
-                        "settings archive-channel <get|set> [channel]",
-                        "modify the channel that closed ticket reports are sent to",
-                    ),
                 ],
             )
         )
@@ -232,41 +220,6 @@ async def panel_access_role(ctx: Context, action: Action, value: Optional[Role])
     :param value: the optional value to set
     """
     await single_config_helper(ctx, "panel access role", action, value)
-
-
-@settings.command(name="mention-roles")
-async def mention_roles(ctx: Context, action: Action, *value: Role):
-    """
-    Get/set/add/remove the role(s) that are mentioned when a ticket is opened
-    :param ctx: the command context
-    :param action: what to do with the key
-    :param value: the optional value(s) to set
-    """
-    await array_config_helper(ctx, "mention roles", action, list(value))
-
-
-@settings.command(name="ticket-category")
-async def ticket_category(
-    ctx: Context, action: Action, value: Optional[CategoryChannel]
-):
-    """
-    Get/set the category where tickets are created
-    :param ctx: the command context
-    :param action: what to do with the key
-    :param value: the optional value to set
-    """
-    await single_config_helper(ctx, "ticket category", action, value)
-
-
-@settings.command(name="archive-channel")
-async def archive_channel(ctx: Context, action: Action, value: Optional[TextChannel]):
-    """
-    Get/set the text channel where ticket logs reside
-    :param ctx: the command context
-    :param action: what to do with the key
-    :param value: the optional value to set
-    """
-    await single_config_helper(ctx, "archive channel", action, value)
 
 
 def setup(bot: Bot):

@@ -17,7 +17,7 @@ def default(author: Union[Member, User], has_footer=True) -> Embed:
 
     # Set the footer
     if has_footer:
-        embed.set_footer(text=f"Requested by {author}", icon_url=str(author.avatar_url))
+        embed.set_footer(text=f"Requested by {author}", icon_url=str(author.avatar))
         embed.timestamp = datetime.now()
 
     return embed
