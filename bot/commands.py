@@ -83,7 +83,8 @@ class Help(HelpCommand):
             for name, command in side:
                 text += f"`{bot.command_prefix}{name}`\n"
 
-            embed.add_field(name="\u200b", value=text.strip("\n"), inline=True)
+            if text != "":
+                embed.add_field(name="\u200b", value=text.strip("\n"), inline=True)
 
         # Add the footer
         embed.add_field(
