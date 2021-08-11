@@ -1,3 +1,4 @@
+from datetime import datetime
 from dotenv import load_dotenv
 from os import environ
 from pydantic import BaseModel
@@ -19,6 +20,9 @@ class Settings(BaseModel):
     database_url: PostgresDsn
     discord_token: DiscordToken
     redis_url: RedisDsn
+
+    event_start: datetime
+    event_end: datetime
 
 
 def load_settings() -> Settings:

@@ -23,16 +23,20 @@ def default(author: Union[Member, User], has_footer=True) -> Embed:
     return embed
 
 
-def message(content) -> Embed:
+def message(content: str, as_title=False) -> Embed:
     """
     Generate an embed for a text message
     :param content: the message content
+    :param as_title: put the content in the title
     """
     # Create the base embed
     embed = Embed(color=EMBED_COLOR, type="rich")
 
     # Set the content
-    embed.description = content
+    if as_title:
+        embed.title = content
+    else:
+        embed.description = content
 
     return embed
 
