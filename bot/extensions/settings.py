@@ -194,6 +194,10 @@ async def settings(ctx: Context):
                         "settings panel-access-role <get|set> [role]",
                         "modify the roles which have access to the panel",
                     ),
+                    (
+                        "settings registered-role <get|set> [role]",
+                        "modify the role marking a participant as registered in hackathon manager",
+                    ),
                 ],
             )
         )
@@ -220,6 +224,17 @@ async def panel_access_role(ctx: Context, action: Action, value: Optional[Role])
     :param value: the optional value to set
     """
     await single_config_helper(ctx, "panel access role", action, value)
+
+
+@settings.command(name="registered-role")
+async def registered_role(ctx: Context, action: Action, value: Optional[Role]):
+    """
+    Get/set the role that marks a participant as verified
+    :param ctx: the command context
+    :param action: what to do with the key
+    :param value: the optional value to set
+    """
+    await single_config_helper(ctx, "registered role", action, value)
 
 
 def setup(bot: Bot):
