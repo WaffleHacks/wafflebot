@@ -89,7 +89,7 @@ class Events(Cog):
         if event.notes:
             embed.description = event.notes
         embed.add_field(
-            name="Starts", value=f"<t:{event.start_dt.strftime('%s')}:R>", inline=True
+            name="Starts", value=f"<t:{int(event.start_dt.timestamp())}:R>", inline=True
         )
 
         # Calculate the duration in hours and minutes
@@ -122,7 +122,7 @@ class Events(Cog):
         events = await self.list_events()
         for event in events:
             embed.description += (
-                f"<t:{event.start_dt.strftime('%s')}:f> - {event.title}\n"
+                f"<t:{int(event.start_dt.timestamp())}:f> - {event.title}\n"
             )
 
         await ctx.message.reply(mention_author=False, embed=embed)
