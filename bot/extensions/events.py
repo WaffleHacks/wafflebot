@@ -71,6 +71,43 @@ class Events(Cog):
             return []
         return list(map(EventResponse.parse_obj, events))
 
+    @command(name="next")
+    async def next_up(self, ctx: Context):
+        """
+        Get the next event
+        :param ctx: the command context
+        """
+        # Get all the events
+        all_events = await self.list_events()
+
+        # Get the next event
+        now = datetime.now(tz=utc)
+        event = next(filter(lambda e: e.start_dt > now, all_events))
+
+        # Build the response
+        embed = embeds.message(f"Up next is: {event.title}", as_title=True)
+        if event.notes:
+            embed.description = event.notes
+        embed.add_field(
+            name="Starts", value=f"<t:{event.start_dt.strftime('%s')}:R>", inline=True
+        )
+
+        # Calculate the duration in hours and minutes
+        total_seconds = (event.end_dt - event.start_dt).seconds
+        hours, remainder = divmod(total_seconds, 60 * 60)
+        minutes = remainder // 60
+
+        # Format the duration
+        duration = ""
+        if hours != 0:
+            duration += f"{hours} hour{'s' if hours > 1 else ''}"
+        if minutes != 0:
+            duration += f" {minutes} min{'s' if minutes > 1 else ''}"
+
+        embed.add_field(name="Duration", value=duration, inline=True)
+
+        await ctx.message.reply(mention_author=False, embed=embed)
+
     @command()
     async def events(self, ctx: Context):
         """
@@ -85,7 +122,7 @@ class Events(Cog):
         events = await self.list_events()
         for event in events:
             embed.description += (
-                f"<t:{int(event.start_dt.strftime('%s'))}:f> - {event.title}\n"
+                f"<t:{event.start_dt.strftime('%s')}:f> - {event.title}\n"
             )
 
         await ctx.message.reply(mention_author=False, embed=embed)
