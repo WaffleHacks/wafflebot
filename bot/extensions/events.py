@@ -21,9 +21,8 @@ class EventResponse(BaseModel):
 
 
 class Events(Cog):
-    def __init__(self, bot: Bot):
+    def __init__(self):
         self.logger = get_logger("extensions.events")
-        self.bot = bot
 
         # Setup the HTTP session
         self.calendar = SETTINGS.bot.teamup_calendar
@@ -35,13 +34,7 @@ class Events(Cog):
         self.logger.info("loaded event commands")
 
     def cog_unload(self):
-        # Close the session
-        self.bot.loop.create_task(self.__shutdown_session())
-
         self.logger.info("unloaded event commands")
-
-    async def __shutdown_session(self):
-        await self.__session.close()
 
     @cached_property
     def query(self) -> Dict[str, str]:
@@ -133,7 +126,7 @@ def setup(bot: Bot):
     Register the cog
     :param bot: the underlying bot
     """
-    bot.add_cog(Events(bot))
+    bot.add_cog(Events())
 
 
 def teardown(bot: Bot):

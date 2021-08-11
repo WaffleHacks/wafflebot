@@ -15,9 +15,8 @@ DESCRIPTION = (
 
 
 class Verification(Cog):
-    def __init__(self, bot: Bot):
+    def __init__(self):
         self.logger = get_logger("extensions.verification")
-        self.bot = bot
 
         # Setup the HTTP session
         self.__session = ClientSession()
@@ -29,9 +28,6 @@ class Verification(Cog):
         self.logger.info("loaded verification commands")
 
     def cog_unload(self):
-        # Close the session
-        self.bot.loop.create_task(self.__shutdown_session())
-
         # Stop the refresher
         self.renew_token.stop()
 
@@ -169,7 +165,7 @@ def setup(bot: Bot):
     Register the cog
     :param bot: the underlying bot
     """
-    bot.add_cog(Verification(bot))
+    bot.add_cog(Verification())
 
 
 def teardown(bot: Bot):
