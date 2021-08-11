@@ -33,15 +33,23 @@ async def on_error(ctx: Context, exception: Exception):
 
     # Notify of non-existent user
     elif exception_type == MemberNotFound:
-        await ctx.channel.send(f"Could not find member `{exception.argument}`")
+        await ctx.reply(
+            embed=embeds.error(
+                "Unknown member", f"Could not find member `{exception.argument}`"
+            ),
+            mention_author=False,
+        )
 
     # Notify of missing parameter
     elif exception_type == MissingRequiredArgument:
         formatted = str(exception)
         arg_separator = formatted.index(" ")
-        await ctx.channel.send(
-            f"`{formatted[:arg_separator]}`{formatted[arg_separator:]}"
-            f" Use `{ctx.bot.command_prefix}help {ctx.command.qualified_name}` for usage information"
+        await ctx.reply(
+            embed=embeds.error(
+                f"`{formatted[:arg_separator]}`{formatted[arg_separator:]}",
+                f"Use `{ctx.bot.command_prefix}help {ctx.command.qualified_name}` for usage information",
+            ),
+            mention_author=False,
         )
 
     else:
@@ -55,18 +63,27 @@ async def on_error(ctx: Context, exception: Exception):
             )
 
         # Notify the user
-        await ctx.channel.send("An internal error occurred, please try again later")
+        await ctx.reply(
+            embed=embeds.error(
+                "Unknown exception",
+                "An internal error occurred, please try again later",
+            ),
+            mention_author=False,
+        )
 
 
 class Help(HelpCommand):
     __OPTIONAL_REGEX = re.compile(r"typing\.Union\[[a-zA-Z0-9.]+, NoneType]")
+
+    def get_destination(self):
+        return self.context.message
 
     async def send_bot_help(self, mapping):
         ctx = self.context
         bot = ctx.bot  # type: Bot
 
         # Create the base embed
-        embed = embeds.default(ctx.author)
+        embed = embeds.default()
         embed.title = "WaffleBot Help"
         embed.description = "All available commands:"
 
@@ -93,7 +110,7 @@ class Help(HelpCommand):
             inline=False,
         )
 
-        await self.get_destination().send(embed=embed)
+        await self.get_destination().reply(embed=embed, mention_author=False)
 
     async def send_command_help(self, command: Command):
         ctx = self.context
@@ -106,7 +123,7 @@ class Help(HelpCommand):
             name = requested_command
 
         # Create the base embed
-        embed = embeds.default(ctx.author)
+        embed = embeds.default()
         embed.title = f"`{bot.command_prefix}{name}` Help"
         embed.description = "`<>` - required argument\n`[]` - optional argument"
 
@@ -143,7 +160,7 @@ class Help(HelpCommand):
 
             embed.add_field(name="Usage", value=usage + "`", inline=False)
 
-        await self.get_destination().send(embed=embed)
+        await self.get_destination().reply(embed=embed, mention_author=False)
 
     async def send_group_help(self, group: Group):
         await group.invoke(self.context)

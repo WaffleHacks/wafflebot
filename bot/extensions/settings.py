@@ -65,8 +65,9 @@ async def single_config_helper(
 
     # Ensure valid action
     if action == Action.Add or action == Action.Remove:
-        await ctx.channel.send(
-            embed=embeds.message(f":x: Cannot add to/remove from non-array config key")
+        await ctx.reply(
+            embed=embeds.message(f":x: Cannot add to/remove from non-array config key"),
+            mention_author=False,
         )
         return
 
@@ -75,33 +76,36 @@ async def single_config_helper(
         result_id = await getattr(CONFIG, attr_name)()
         result = resolve_object(ctx.guild, result_id)
         if result is None:
-            await ctx.channel.send(
+            await ctx.reply(
                 embed=embeds.message(
                     f"The {name} is currently set to `{result_id}`, but the {attr_type} may not exist."
                 )
             )
         else:
-            await ctx.channel.send(
+            await ctx.reply(
                 embed=embeds.message(f"The {name} is currently {result.mention}."),
                 allowed_mentions=None,
+                mention_author=False,
             )
 
     # Set the current value
     else:
         # Ensure a value is provided
         if value is None:
-            await ctx.channel.send(
-                embed=embeds.message(f":x: A {attr_type} to set must be provided!")
+            await ctx.reply(
+                embed=embeds.message(f":x: A {attr_type} to set must be provided!"),
+                mention_author=False,
             )
             return
 
         # Set the value
         await getattr(CONFIG, attr_name)(value.id)
-        await ctx.channel.send(
+        await ctx.reply(
             embed=embeds.message(
                 f":white_check_mark: The {name} is now {value.mention}"
             ),
             allowed_mentions=None,
+            mention_author=False,
         )
 
 
@@ -125,7 +129,11 @@ async def send_config_array(ctx: Context, name: str, attr_name: str):
             message += f"{result.mention}, "
 
     # Send it
-    await ctx.channel.send(embed=embeds.message(message[:-2]), allowed_mentions=None)
+    await ctx.reply(
+        embed=embeds.message(message[:-2]),
+        allowed_mentions=None,
+        mention_author=False,
+    )
 
 
 async def array_config_helper(
@@ -147,8 +155,9 @@ async def array_config_helper(
 
     # Ensure there is at least 1 value present
     elif values is None:
-        await ctx.channel.send(
-            embed=embeds.message(f":x: At least 1 {attr_type} must be provided!")
+        await ctx.reply(
+            embed=embeds.message(f":x: At least 1 {attr_type} must be provided!"),
+            mention_author=False,
         )
 
     # Add/remove/set the value(s)
@@ -180,10 +189,9 @@ async def settings(ctx: Context):
     :param ctx: the command context
     """
     if ctx.invoked_subcommand is None:
-        await ctx.channel.send(
+        await ctx.reply(
             embed=embeds.help_(
                 ctx.bot.command_prefix,
-                ctx.author,
                 "settings",
                 [
                     (
@@ -199,7 +207,8 @@ async def settings(ctx: Context):
                         "modify the role marking a participant as registered in hackathon manager",
                     ),
                 ],
-            )
+            ),
+            mention_author=False,
         )
 
 

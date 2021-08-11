@@ -1,5 +1,5 @@
 from aiohttp import ClientSession
-from discord import Member, Object, utils
+from discord import Member, Object
 from discord.ext import tasks
 from discord.ext.commands import Bot, Cog, Context, command
 from typing import List, Optional
@@ -130,21 +130,38 @@ class Verification(Cog):
         # Get all the known usernames
         usernames = await self.list_usernames()
 
+        added = 0
+        removed = 0
+        skipped = 0
         for user in ctx.guild.members:
             # Skip any bots
             if user.bot:
+                skipped += 1
                 continue
 
             # Ignore anyone with privileged roles
             roles = set(map(lambda r: r.id, user.roles))
             if len(roles & ignored) != 0:
+                skipped += 1
                 continue
 
             # Determine whether to add or remove the role
             if f"{user.name}#{user.discriminator}" in usernames:
+                added += 1
                 await user.add_roles(verified)
             else:
+                removed += 1
                 await user.remove_roles(verified)
+
+        embed = embeds.message("Re-verification complete!", as_title=True)
+        embed.description = (
+            "All members were checked to ensure they are registered in the application portal.\nBelow you can find "
+            "some statistics. Members were skipped if they had an elevated role or are a bot."
+        )
+        embed.add_field(name="Verified", value=str(added), inline=True)
+        embed.add_field(name="Unverified", value=str(removed), inline=True)
+        embed.add_field(name="Skipped", value=str(skipped), inline=True)
+        await ctx.reply(embed=embed, mention_author=False)
 
 
 def setup(bot: Bot):

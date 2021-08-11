@@ -106,7 +106,7 @@ class Events(Cog):
 
         embed.add_field(name="Duration", value=duration, inline=True)
 
-        await ctx.message.reply(mention_author=False, embed=embed)
+        await ctx.reply(mention_author=False, embed=embed)
 
     @command()
     async def events(self, ctx: Context):
@@ -125,7 +125,7 @@ class Events(Cog):
                 f"<t:{int(event.start_dt.timestamp())}:f> - {event.title}\n"
             )
 
-        await ctx.message.reply(mention_author=False, embed=embed)
+        await ctx.reply(mention_author=False, embed=embed)
 
 
 def setup(bot: Bot):

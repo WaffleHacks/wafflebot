@@ -36,7 +36,7 @@ class CannedResponses(Cog):
             return
 
         # Build the response
-        embed = embeds.default(message.author)
+        embed = embeds.default()
         embed.title = response.title
         embed.description = response.content
 
@@ -44,7 +44,7 @@ class CannedResponses(Cog):
         for name, content in response.fields.items():
             embed.add_field(name=name, value=content, inline=False)
 
-        await message.channel.send(embed=embed)
+        await message.reply(embed=embed, mention_author=False)
         self.logger.info(f"generated response for '{key}'")
 
 

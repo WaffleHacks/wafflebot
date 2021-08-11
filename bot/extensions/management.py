@@ -26,10 +26,9 @@ async def management(ctx: Context):
     :param ctx: the command context
     """
     if ctx.invoked_subcommand is None:
-        await ctx.channel.send(
+        await ctx.reply(
             embed=embeds.help_(
                 ctx.bot.command_prefix,
-                ctx.author,
                 "management",
                 [
                     ("management enable <package>", "enable an extension"),
@@ -40,7 +39,8 @@ async def management(ctx: Context):
                     ("management disable <package>", "disable an extension"),
                     ("management list", "list all the enabled extensions"),
                 ],
-            )
+            ),
+            mention_author=False,
         )
 
 
@@ -54,19 +54,31 @@ async def enable_extension(ctx: Context, package: str):
     import_name = f"bot.extensions.{package}"
     try:
         ctx.bot.load_extension(import_name)
-        await ctx.channel.send(f"Enabled extension `{package}`!")
+        await ctx.reply(
+            embed=embeds.message(f"Enabled extension `{package}`!"),
+            mention_author=False,
+        )
     except ExtensionAlreadyLoaded:
         logger.warning(f"already loaded extension '{package}'")
-        await ctx.channel.send(f"That extension is already enabled!")
+        await ctx.reply(
+            embed=embeds.message(f"That extension is already enabled!"),
+            mention_author=False,
+        )
     except (ExtensionFailed, NoEntryPointError) as e:
         logger.error(f"failed to load extension '{package}': {e}")
-        await ctx.channel.send(
-            f"An error occurred while enabling extension `{package}`: {e}."
+        await ctx.reply(
+            embed=embeds.message(
+                f"An error occurred while enabling extension `{package}`: {e}."
+            ),
+            mention_author=False,
         )
     except ExtensionNotFound:
         logger.error(f"extension '{package}' could not be found")
-        await ctx.channel.send(
-            f"Couldn't find extension `{package}`, check the name and try again."
+        await ctx.reply(
+            embed=embeds.message(
+                f"Couldn't find extension `{package}`, check the name and try again."
+            ),
+            mention_author=False,
         )
 
 
@@ -80,18 +92,30 @@ async def reload_extension(ctx: Context, package: str):
     import_name = f"bot.extensions.{package}"
     try:
         ctx.bot.reload_extension(import_name)
-        await ctx.channel.send(f"Reloaded extension `{package}`!")
+        await ctx.reply(
+            embed=embeds.message(f"Reloaded extension `{package}`!"),
+            mention_author=False,
+        )
     except ExtensionNotFound:
         logger.error(f"extension '{package}' could not be found")
-        await ctx.channel.send(
-            f"Couldn't find extension `{package}`, check the name and try again."
+        await ctx.reply(
+            embed=embeds.message(
+                f"Couldn't find extension `{package}`, check the name and try again."
+            ),
+            mention_author=False,
         )
     except (ExtensionFailed, NoEntryPointError) as e:
         logger.error(f"failed to load extension '{package}': {e}")
-        await ctx.channel.send(f"Failed to load extension: `{package}`: {e}.")
+        await ctx.reply(
+            embed=embeds.message(f"Failed to load extension: `{package}`: {e}."),
+            mention_author=False,
+        )
     except ExtensionNotLoaded:
         logger.error(f"extension '{package}' is not loaded")
-        await ctx.channel.send(f"Cannot reload disabled extension `{package}`.")
+        await ctx.reply(
+            embed=embeds.message(f"Cannot reload disabled extension `{package}`."),
+            mention_author=False,
+        )
 
 
 @management.command(name="disable")
@@ -104,10 +128,16 @@ async def disable_extension(ctx: Context, package: str):
     import_name = f"bot.extensions.{package}"
     try:
         ctx.bot.unload_extension(import_name)
-        await ctx.channel.send(f"Disabled extension `{package}`!")
+        await ctx.reply(
+            embed=embeds.message(f"Disabled extension `{package}`!"),
+            mention_author=False,
+        )
     except ExtensionNotLoaded:
         logger.error(f"extension '{package}' is not loaded")
-        await ctx.channel.send(f"Cannot disable a disabled extension `{package}`.")
+        await ctx.reply(
+            embed=embeds.message(f"Cannot disable a disabled extension `{package}`."),
+            mention_author=False,
+        )
 
 
 @management.command(name="list")
@@ -117,7 +147,7 @@ async def list_extensions(ctx: Context):
     :param ctx: the command context
     """
     # Build the base response
-    embed = embeds.default(ctx.author)
+    embed = embeds.default()
     embed.title = "Enabled Extensions"
 
     # Add all the extension names
@@ -131,7 +161,7 @@ async def list_extensions(ctx: Context):
         name = extension[extension.rfind(".") + 1 :]
         embed.add_field(name=f"`{name}`", value=description)
 
-    await ctx.channel.send(embed=embed)
+    await ctx.reply(embed=embed, mention_author=False)
 
 
 def setup(bot: Bot):
