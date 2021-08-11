@@ -11,3 +11,8 @@ class SettingResponse(BaseModel):
 
 class SettingUpdate(BaseModel):
     value: Union[List[str], str]
+
+
+class RoleResponse(BaseModel):
+    id: str
+    name: str

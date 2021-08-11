@@ -6,6 +6,7 @@
   import { redirect } from "../router";
 
   let settings = [];
+  let roles = [];
 
   onMount(async () => await refresh());
 
@@ -14,6 +15,10 @@
     const content = await Settings.list();
     if (!content.success) redirect("/login");
     else settings = content.data;
+
+    const result = await Settings.roles();
+    if (!result.success) redirect("/login");
+    else roles = result.data;
   }
 
   // Update a value
@@ -97,7 +102,11 @@
           {:else}
             <div class="row">
               <div class="col-9">
-                <input type="text" class="form-control" id={`setting-${setting.key}`} placeholder={`${setting.key.split("_").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" ")} ID`} bind:value={settings[setting_index].value}/>
+                <select class="form-select" aria-label="Role selector" id={`setting-${setting.key}`} bind:value={settings[setting_index].value}>
+                  {#each roles as role, role_index}
+                    <option value={role.id} selected={role.id === setting.value}>{role.name}</option>
+                  {/each}
+                </select>
               </div>
               <div class="col-3">
                 <button type="button" class="btn btn-outline-success" on:click={update(setting_index)}>

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 
-from common import CONFIG, ConfigKey
-from .models import SettingUpdate, SettingResponse
+from common import CONFIG, SETTINGS, ConfigKey
+from .models import RoleResponse, SettingUpdate, SettingResponse
+from ..utils.client import with_discord
 
 router = APIRouter()
 
@@ -67,3 +68,11 @@ async def update(key: ConfigKey, fields: SettingUpdate):
         result = str(result)
 
     return SettingResponse(key=key, value=result)
+
+
+@router.get("/roles", response_model=List[RoleResponse])
+async def roles(discord=Depends(with_discord)):
+    guild = await discord.fetch_guild(SETTINGS.api.guild_id)
+    discord_roles = await guild.fetch_roles()
+
+    return [{"name": role.name, "id": str(role.id)} for role in discord_roles]
