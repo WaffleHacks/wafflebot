@@ -9,7 +9,7 @@
   export let message;
 
   // Redirect to server-side login through OAuth
-  const redirect = () => (window.location.href = "/authentication/login");
+  const redirect = () => (window.location.href = "/api/authentication/login");
 
   // Add the error from the query params if present
   const params = new URLSearchParams(window.location.search);
