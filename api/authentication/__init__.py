@@ -59,12 +59,12 @@ async def callback(
     has_panel = False
     for guild in guilds:
         # Get the field
-        name = guild.get("name")
+        gid = guild.get("id")
         is_owner = guild.get("owner")
         permissions = int(guild.get("permissions"))
 
-        # Ignore servers that don't match this name
-        if name != SETTINGS.api.guild_name:
+        # Ignore servers that don't match the expected id
+        if gid != str(SETTINGS.api.guild_id):
             continue
 
         # Set the panel
