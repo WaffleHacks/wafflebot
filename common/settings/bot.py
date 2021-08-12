@@ -1,8 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
+from typing import List
 
 
 class BotSettings(BaseModel):
     log_file: str = "discord.log"
+
+    disabled_extensions: List[str] = []
 
     hm_url: str = "https://apply.wafflehacks.tech"
     hm_client_id: str
@@ -13,3 +16,14 @@ class BotSettings(BaseModel):
 
     class Config:
         env_prefix = "BOT_"
+
+    @validator("disabled_extensions", pre=True)
+    def format_modules(cls, value):
+        if type(value) != str:
+            raise TypeError("must be a string")
+
+        if len(value.strip()) == 0:
+            return []
+
+        # Split the string on commas, remove any surrounding whitespace, and convert to lowercase
+        return list(map(str.lower, map(str.strip, value.split(","))))

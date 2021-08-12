@@ -10,6 +10,7 @@ from discord.ext.commands import (
 import os
 from pathlib import Path
 
+from common import SETTINGS
 from . import logger, commands
 
 logger.initialize()
@@ -45,15 +46,20 @@ for path in os.listdir(extensions_path):
     ):
         continue
 
+    import_name = path.replace(".py", "")
+    if import_name in SETTINGS.bot.disabled_extensions:
+        extension_logger.info(f"skipping disabled extension '{import_name}'")
+        continue
+
     # Create the qualified import name
-    import_name = f"bot.extensions.{path.replace('.py', '')}"
+    import_path = f"bot.extensions.{import_name}"
 
     # Attempt to load the extension
     try:
-        bot.load_extension(import_name)
+        bot.load_extension(import_path)
     except ExtensionAlreadyLoaded:
-        extension_logger.warning(f"already loaded extension: '{import_name}'")
+        extension_logger.warning(f"already loaded extension: '{import_path}'")
     except (ExtensionFailed, NoEntryPointError) as e:
-        extension_logger.error(f"failed to load extension '{import_name}': {e}")
+        extension_logger.error(f"failed to load extension '{import_path}': {e}")
     except ExtensionNotFound:
-        extension_logger.error(f"extension '{import_name}' could not be found")
+        extension_logger.error(f"extension '{import_path}' could not be found")
