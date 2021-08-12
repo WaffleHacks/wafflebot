@@ -27,7 +27,7 @@ RUN poetry export -f requirements.txt -o requirements.txt --without-hashes
 FROM base as dependencies
 
 # Instlal build dependencies
-RUN apt-get install -y --no-install-recommends build-essential
+RUN apt-get install -y --no-install-recommends build-essential git
 
 # Install dependencies
 COPY --from=export-dependencies /requirements.txt ./
