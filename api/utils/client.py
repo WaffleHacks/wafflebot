@@ -1,6 +1,8 @@
-from discord import Client, Message, Object, TextChannel
+from discord import Client, Guild, Message, Object, TextChannel
 from discord.errors import NotFound
 from typing import Optional
+
+from common import SETTINGS
 
 
 DISCORD = Client()

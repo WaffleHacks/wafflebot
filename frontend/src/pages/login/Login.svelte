@@ -30,6 +30,8 @@
     <p class="alert alert-danger" style="width: 25%; margin-left: 37.5%" role="alert">
       {#if errorCode === "access_denied"}
         The authorization request was denied.
+      {:else if errorCode === "unauthorized"}
+        You do not have the necessary permissions.
       {:else if errorCode === "server_error" || errorCode === "temporarily_unavailable"}
         Discord was unable to process the authorization request. Please try again later.
       {/if}

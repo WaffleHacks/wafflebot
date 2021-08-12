@@ -4,8 +4,9 @@ from typing import List
 from common import CONFIG, SETTINGS, ConfigKey
 from .models import RoleResponse, SettingUpdate, SettingResponse
 from ..utils.client import with_discord
+from ..utils.session import is_admin
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(is_admin)])
 
 
 @router.get("/", response_model=List[SettingResponse])

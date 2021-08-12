@@ -50,25 +50,11 @@
   import { icons } from "feather-icons";
   import { User } from "../api";
   import { SVG_ATTRS } from "../constants";
+  import { user } from "../stores";
   import { activeRoute } from "../router/Router.svelte";
 
-  // The sidebar navigation items
+  // The extra sidebar navigation items
   const NAVIGATION = [
-    {
-      title: "General",
-      links: [
-        {
-          icon: "home",
-          name: "Home",
-          to: "/",
-        },
-        {
-          icon: "settings",
-          name: "Settings",
-          to: "/settings",
-        }
-      ],
-    },
     {
       title: "Utilities",
       links: [
@@ -89,6 +75,11 @@
     // Redirect to the login page
     page.redirect("/login");
   }
+
+  let isAdmin;
+  user.subscribe(u => {
+    isAdmin = u.is_admin;
+  });
 </script>
 
 <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
@@ -102,6 +93,33 @@
   <div class="row">
     <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
       <div class="position-sticky pt-3">
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+          General
+        </h6>
+
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link" class:active={$activeRoute.path === "/"} aria-current="{$activeRoute.path === '/'}" class:disabled={$activeRoute.path === "/"} href="/">
+              {@html icons['home'].toSvg(SVG_ATTRS)}
+              Home
+            </a>
+          </li>
+          {#if isAdmin}
+            <li class="nav-item">
+              <a class="nav-link" class:active={$activeRoute.path === "/settings"} aria-current="{$activeRoute.path === '/settings'}" class:disabled={$activeRoute.path === "/settings"} href="/settings">
+                {@html icons['settings'].toSvg(SVG_ATTRS)}
+                Settings
+              </a>
+            </li>
+          {/if}
+          <li class="nav-item">
+            <button class="nav-link btn btn-link" on:click={onLogout}>
+              {@html icons['log-out'].toSvg(SVG_ATTRS)}
+              Log out
+            </button>
+          </li>
+        </ul>
+
         {#each NAVIGATION as {title, links}}
           <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
             {title}
@@ -116,14 +134,6 @@
                 </a>
               </li>
             {/each}
-            {#if title === "General"}
-              <li class="nav-item">
-                <button class="nav-link btn btn-link" on:click={onLogout}>
-                  {@html icons['log-out'].toSvg(SVG_ATTRS)}
-                  Log out
-                </button>
-              </li>
-            {/if}
           </ul>
         {/each}
       </div>

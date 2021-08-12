@@ -8,7 +8,6 @@ class UserInfo(BaseModel):
 
     id: str
     username: str
-    email: str
-    email_verified: bool
     picture: str
     expiration: int
+    is_admin: bool

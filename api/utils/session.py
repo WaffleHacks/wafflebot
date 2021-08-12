@@ -21,15 +21,20 @@ async def is_logged_in(session=Depends(get_session)) -> Dict:
         raise HTTPException(status_code=401, detail="unauthorized")
 
     # Check that the OAuth token hasn't expired
-    expiration = session.get("token").get("expires_at")
-    if time.time() > expiration:
+    if time.time() > session.get("expiration"):
         raise HTTPException(status_code=401, detail="unauthorized")
 
-    # Check that the user has panel access
-    if not session.get("has_panel"):
-        raise HTTPException(status_code=403, detail="forbidden")
-
     return session
+
+
+async def is_admin(session=Depends(get_session)) -> bool:
+    """
+    Ensure that the user is an admin
+    :param session: the session data
+    """
+    if not session.get("is_admin"):
+        raise HTTPException(status_code=403, detail="forbidden")
+    return True
 
 
 class Session(object):

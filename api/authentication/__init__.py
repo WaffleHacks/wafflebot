@@ -1,18 +1,31 @@
 from aiohttp import ClientSession
-from fastapi import APIRouter, Depends, Query, Request
+from discord import Role
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from functools import lru_cache
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse, Response, URL
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
-from common import SETTINGS
-from common.constants import MANAGE_SERVER_PERMISSIONS
+from common import CONFIG, SETTINGS
 from common.database import get_db, User
 from .models import UserInfo
 from .oauth import get_discord_client
 from ..utils.session import get_session, is_logged_in, Session
+from ..utils.client import DISCORD
 
 router = APIRouter()
+
+
+@lru_cache(maxsize=4)
+async def get_user_roles(user_id: int) -> List[Role]:
+    """
+    Get a user's roles from Discord
+    :param user_id: the id to get roles for
+    """
+    guild = await DISCORD.fetch_guild(SETTINGS.api.guild_id)
+    user = await guild.fetch_member(user_id)
+    return user.roles
 
 
 @router.get("/login")
@@ -45,6 +58,14 @@ async def callback(
     # Get the user's info
     client.token = token
     user_info = await client.userinfo(token=token)
+    user_id = int(user_info.get("id"))
+
+    # Get the user's role ids
+    roles = list(map(lambda r: r.id, await get_user_roles(user_id)))
+
+    # Determine if the user has panel access
+    if (await CONFIG.panel_access_role()) not in roles:
+        return RedirectResponse("/login?error=unauthorized")
 
     # Get all the user's guilds
     async with ClientSession() as session:
@@ -54,31 +75,21 @@ async def callback(
         ) as response:
             guilds = await response.json()
 
-    # Determine if the user has panel
-    # TODO: change to role based permissions
-    has_panel = False
-    for guild in guilds:
-        # Get the field
-        gid = guild.get("id")
-        is_owner = guild.get("owner")
-        permissions = int(guild.get("permissions"))
-
-        # Ignore servers that don't match the expected id
-        if gid != str(SETTINGS.api.guild_id):
-            continue
-
-        # Set the panel
-        has_panel = (
-            is_owner
-            or permissions & MANAGE_SERVER_PERMISSIONS == MANAGE_SERVER_PERMISSIONS
+    # Determine if the user has admin access
+    is_owner = any(
+        map(
+            lambda g: g.get("id") == str(SETTINGS.api.guild_id) and g.get("owner"),
+            guilds,
         )
+    )
+    is_admin = (await CONFIG.management_role()) in roles or is_owner
 
     # Save the user's info to the database
     user = User(
-        id=int(user_info["id"]),
+        id=user_id,
         username=user_info["username"],
         avatar=user_info["picture"],
-        has_panel=has_panel,
+        is_admin=is_admin,
     )
 
     # Insert and ignore failures
@@ -91,8 +102,8 @@ async def callback(
     # Store the info in the session
     request.session["logged_in"] = True
     request.session["user"] = dict(user_info)
-    request.session["token"] = dict(token)
-    request.session["has_panel"] = has_panel
+    request.session["is_admin"] = is_admin
+    request.session["expiration"] = dict(token).get("expires_at")
 
     return RedirectResponse("/login/complete")
 
@@ -103,8 +114,8 @@ async def logout(session=Depends(get_session)):
     Logout out a user
     """
     # Remove everything from their session
-    session.pop("user", None)
-    session.pop("token", None)
+    for key in list(session):
+        del session[key]
     session["logged_in"] = False
 
     return Response(status_code=204)
@@ -114,10 +125,12 @@ async def logout(session=Depends(get_session)):
 async def me(
     _=Depends(is_logged_in),
     user: Dict = Depends(Session("user")),
-    expiration: int = Depends(Session("token.expires_at")),
+    expiration: int = Depends(Session("expiration")),
+    is_admin: bool = Depends(Session("is_admin")),
 ):
     """
     Retrieve the currently logged in user's profile
     """
     user["expiration"] = expiration
+    user["is_admin"] = is_admin
     return user

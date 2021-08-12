@@ -10,8 +10,6 @@ async def normalize_userinfo(_client, data: Dict[str, str]) -> Dict[str, str]:
     params = {
         "id": data["id"],
         "username": data["username"] + "#" + data["discriminator"],
-        "email": data["email"],
-        "email_verified": data["verified"],
     }
 
     # Make the avatar a full URL if provided
