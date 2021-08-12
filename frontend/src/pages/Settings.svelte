@@ -58,8 +58,6 @@
 
 <br/><br/>
 
-<!-- TODO: allow selecting roles/channels instead of using IDs -->
-
 <div class="row row-cols-1 row-cols-md-3 g-4">
   {#each settings as setting, setting_index}
     <div class="col">

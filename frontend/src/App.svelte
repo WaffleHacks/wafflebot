@@ -17,7 +17,6 @@
 	  // Fetch the user's profile
 	  const content = await User.info();
 
-	  // TODO: update eslint to fix improper indentation
 	  if (content.success) user.set(content.data);
 	  else {
 	  	if (content.status === 403) authMessage = "You do not have permissions to access the panel!";
