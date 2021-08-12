@@ -2,6 +2,8 @@ from authlib.integrations.starlette_client import OAuth
 from starlette.config import Config, environ
 from typing import Dict
 
+from common import SETTINGS
+
 
 async def normalize_userinfo(_client, data: Dict[str, str]) -> Dict[str, str]:
     # Remap the user info
@@ -22,8 +24,8 @@ async def normalize_userinfo(_client, data: Dict[str, str]) -> Dict[str, str]:
 
 
 # And remap the configuration to be compatible with Starlette
-environ["DISCORD_CLIENT_ID"] = environ["API_DISCORD_CLIENT_ID"]
-environ["DISCORD_CLIENT_SECRET"] = environ["API_DISCORD_CLIENT_SECRET"]
+environ["DISCORD_CLIENT_ID"] = SETTINGS.api.discord_client_id
+environ["DISCORD_CLIENT_SECRET"] = SETTINGS.api.discord_client_secret
 config = Config(".env")
 
 # Register the discord auth provider

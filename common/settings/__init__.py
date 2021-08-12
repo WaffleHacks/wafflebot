@@ -1,7 +1,9 @@
 from datetime import datetime
 from dotenv import load_dotenv
+from enum import Enum
 from os import environ
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError, root_validator
+from typing import Optional
 
 from .api import ApiSettings
 from .bot import BotSettings
@@ -11,9 +13,17 @@ API_PREFIX = "api_"
 BOT_PREFIX = "bot_"
 
 
+class Mode(Enum):
+    API = "api"
+    BOT = "bot"
+    BOTH = "both"
+
+
 class Settings(BaseModel):
-    api: ApiSettings
-    bot: BotSettings
+    api: Optional[ApiSettings]
+    bot: Optional[BotSettings]
+
+    mode: Mode = Mode.BOTH
 
     full_errors: bool = False
 
@@ -23,6 +33,20 @@ class Settings(BaseModel):
 
     event_start: datetime
     event_end: datetime
+
+    @root_validator
+    def section_required(cls, values):
+        mode = values["mode"]
+        if mode == Mode.BOTH and (
+            values.get("api") is None or values.get("bot") is None
+        ):
+            raise ValueError("settings for api and bot are required")
+        elif mode == Mode.API and values.get("api") is None:
+            raise ValueError("settings for api are required")
+        elif mode == Mode.BOT and values.get("bot") is None:
+            raise ValueError("settings for bot are required")
+
+        return values
 
 
 def load_settings() -> Settings:
@@ -41,5 +65,10 @@ def load_settings() -> Settings:
             raw_settings["bot"][key[4:]] = value
         else:
             raw_settings[key] = value
+
+    if raw_settings["api"] == {}:
+        raw_settings["api"] = None
+    if raw_settings["bot"] == {}:
+        raw_settings["bot"] = None
 
     return Settings(**raw_settings)
