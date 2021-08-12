@@ -108,9 +108,9 @@ class Verification(Cog):
         if await self.username_exists(username):
             await member.add_roles(role)
 
-    @command(name="re-verify")
+    @command(name="reverify")
     @has_role(ConfigKey.PanelAccessRole)
-    async def re_verify(self, ctx: Context):
+    async def reverify(self, ctx: Context):
         """
         Re-verify every member currently in the server
         :param ctx: the command context
