@@ -1,8 +1,9 @@
+from discord import TextChannel
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 
 from common import CONFIG, SETTINGS, ConfigKey
-from .models import RoleResponse, SettingUpdate, SettingResponse
+from .models import ChannelResponse, RoleResponse, SettingUpdate, SettingResponse
 from ..utils.client import with_discord
 from ..utils.session import is_admin
 
@@ -25,7 +26,7 @@ async def get():
             result = str(result)
 
         # Add it to the response
-        response.append(SettingResponse(key=key.value, value=result))
+        response.append(SettingResponse(key=key.value, type=key.type(), value=result))
 
     return response
 
@@ -68,7 +69,7 @@ async def update(key: ConfigKey, fields: SettingUpdate):
     else:
         result = str(result)
 
-    return SettingResponse(key=key, value=result)
+    return SettingResponse(key=key, type=key.type(), value=result)
 
 
 @router.get("/roles", response_model=List[RoleResponse])
@@ -77,3 +78,12 @@ async def roles(discord=Depends(with_discord)):
     discord_roles = await guild.fetch_roles()
 
     return [{"name": role.name, "id": str(role.id)} for role in discord_roles]
+
+
+@router.get("/channels", response_model=List[ChannelResponse])
+async def channels(discord=Depends(with_discord)):
+    guild = await discord.fetch_guild(SETTINGS.discord_guild_id)
+    all_channels = await guild.fetch_channels()
+    text_channels = filter(lambda c: isinstance(c, TextChannel), all_channels)
+
+    return [{"name": c.name, "id": str(c.id)} for c in text_channels]

@@ -119,10 +119,22 @@ export class Settings {
 
   /**
    * Get a list of the roles in the Discord
-   * @returns {Promise<{data: Array<{name: string, id: string, color: string}>, success: boolean, status: number}>}
+   * @returns {Promise<{data: Array<{name: string, id: string}>, success: boolean, status: number}>}
    */
   static async roles() {
     const response = await fetch("/api/settings/roles", {
+      credentials: "same-origin",
+    });
+    const data = await response.json();
+    return addSuccess(data, response);
+  }
+
+  /**
+   * Get a list of the channels in the Discord
+   * @returns {Promise<{data: Array<{name: string, id: string}>, success: boolean, status: number}>}
+   */
+  static async channels() {
+    const response = await fetch("/api/settings/channels", {
       credentials: "same-origin",
     });
     const data = await response.json();

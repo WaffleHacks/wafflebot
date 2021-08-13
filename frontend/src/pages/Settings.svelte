@@ -6,6 +6,7 @@
   import { redirect } from "../router";
 
   let settings = [];
+  let channels = [];
   let roles = [];
 
   onMount(async () => await refresh());
@@ -16,9 +17,8 @@
     if (!content.success) redirect("/login");
     else settings = content.data;
 
-    const result = await Settings.roles();
-    if (!result.success) redirect("/login");
-    else roles = result.data;
+    channels = (await Settings.channels()).data;
+    roles = (await Settings.roles()).data;
   }
 
   // Update a value
@@ -101,9 +101,15 @@
             <div class="row">
               <div class="col-9">
                 <select class="form-select" aria-label="Role selector" id={`setting-${setting.key}`} bind:value={settings[setting_index].value}>
-                  {#each roles as role, role_index}
-                    <option value={role.id} selected={role.id === setting.value}>{role.name}</option>
-                  {/each}
+                  {#if setting.type === "role"}
+                    {#each roles as option, index}
+                      <option value={option.id} selected={option.id === setting.value}>{option.name}</option>
+                    {/each}
+                  {:else if setting.type === "text_channel"}
+                    {#each channels as option, index}
+                      <option value={option.id} selected={option.id === setting.value}>{option.name}</option>
+                    {/each}
+                  {/if}
                 </select>
               </div>
               <div class="col-3">
