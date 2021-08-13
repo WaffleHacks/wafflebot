@@ -4,6 +4,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from common import CONFIG, SETTINGS
+from .announcements import router as announcements_router
 from .authentication import router as authentication_router
 from .canned_responses import router as canned_responses_router
 from .settings import router as settings_router
@@ -18,6 +19,12 @@ app.add_middleware(SessionMiddleware, secret_key=SETTINGS.api.secret_key)
 
 # Register API routers
 api = APIRouter(prefix="/api")
+api.include_router(
+    announcements_router,
+    prefix="/announcements",
+    tags=["announcements"],
+    dependencies=[Depends(is_logged_in)],
+)
 api.include_router(
     authentication_router, prefix="/authentication", tags=["authentication"]
 )

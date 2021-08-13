@@ -73,7 +73,7 @@ async def update(key: ConfigKey, fields: SettingUpdate):
 
 @router.get("/roles", response_model=List[RoleResponse])
 async def roles(discord=Depends(with_discord)):
-    guild = await discord.fetch_guild(SETTINGS.api.guild_id)
+    guild = await discord.fetch_guild(SETTINGS.discord_guild_id)
     discord_roles = await guild.fetch_roles()
 
     return [{"name": role.name, "id": str(role.id)} for role in discord_roles]

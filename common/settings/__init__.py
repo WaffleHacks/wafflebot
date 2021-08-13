@@ -28,8 +28,10 @@ class Settings(BaseModel):
     full_errors: bool = False
 
     database_url: PostgresDsn
-    discord_token: DiscordToken
     redis_url: RedisDsn
+
+    discord_token: DiscordToken
+    discord_guild_id: int
 
     event_start: datetime
     event_end: datetime

@@ -1,5 +1,5 @@
 from discord import utils, CategoryChannel, Guild, Role, TextChannel
-from discord.ext.commands import group, Bot, Context, Greedy
+from discord.ext.commands import group, Bot, Context
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -206,6 +206,10 @@ async def settings(ctx: Context):
                         "settings registered-role <get|set> [role]",
                         "modify the role marking a participant as registered in hackathon manager",
                     ),
+                    (
+                        "settings announcements-channel <get|set> [channel]",
+                        "modify the channel where announcements will be sent",
+                    ),
                 ],
             ),
             mention_author=False,
@@ -244,6 +248,19 @@ async def registered_role(ctx: Context, action: Action, value: Optional[Role]):
     :param value: the optional value to set
     """
     await single_config_helper(ctx, "registered role", action, value)
+
+
+@settings.command(name="announcements-channel")
+async def announcements_channel(
+    ctx: Context, action: Action, value: Optional[TextChannel]
+):
+    """
+    Get/set the channel for announcements
+    :param ctx: the command context
+    :param action: what to do with the key
+    :param value: the optional value to set
+    """
+    await single_config_helper(ctx, "announcements channel", action, value)
 
 
 def setup(bot: Bot):
