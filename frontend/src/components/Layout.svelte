@@ -59,7 +59,12 @@
       title: "Utilities",
       links: [
         {
-          icon: "mail",
+          icon: "radio",
+          name: "Announcements",
+          to: "/announcements",
+        },
+        {
+          icon: "package",
           name: "Canned Responses",
           to: "/canned-responses",
         },

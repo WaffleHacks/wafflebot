@@ -31,7 +31,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class={`btn ${closeStyle}`} data-bs-dismiss="modal" on:click={close}>{closeText}</button>
-        <button type="button" class={`btn ${confirmStyle}`} data-bs-dismiss="modal" on:click={onConfirm}>{confirmText}</button>
+        <button type="button" class={`btn ${confirmStyle}`} data-bs-dismiss="modal" on:click={onConfirm} on:click={close}>{confirmText}</button>
       </div>
     </div>
   </div>

@@ -51,6 +51,8 @@ async def update(
     # Set any fields
     if fields.send_at is not None:
         announcement.send_at = fields.send_at
+    if fields.name is not None:
+        announcement.name = fields.name
     if fields.content is not None:
         announcement.content = fields.content
     if fields.title is not None:

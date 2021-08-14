@@ -28,6 +28,69 @@ export class User {
   }
 }
 
+export class Announcements {
+  /**
+   * Get a list of all the announcements
+   * @returns {Promise<{data: Object, success: boolean}>}
+   */
+  static async list() {
+    const response = await fetch("/api/announcements/");
+    const content = await response.json();
+    return addSuccess(content, response);
+  }
+
+  /**
+   * Create an announcement
+   * @param name {string} the friendly name for the announcement
+   * @param send_at {Date} when it should be sent
+   * @param embed {boolean} if the announcement is displayed in an embed
+   * @param title {string} the embed's title
+   * @param content {string} the announcement content
+   * @returns {Promise<{data: Object, success: boolean}>}
+   */
+  static async create(name, send_at, embed, title, content) {
+    const response = await fetch("/api/announcements/", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, send_at, embed, title, content }),
+    });
+    const data = await response.json();
+    return addSuccess(data, response);
+  }
+
+  /**
+   * Modify a canned response
+   * @param id {number} the primary key
+   * @param name {string} the friendly name for the announcement
+   * @param send_at {Date} when it should be sent
+   * @param embed {boolean} if the announcement is displayed in an embed
+   * @param title {string} the embed's title
+   * @param content {string} the announcement content
+   * @returns {Promise<{data: Object, success: boolean}>}
+   */
+  static async update(id, name, send_at, embed, title, content) {
+    const response = await fetch(`/api/announcements/${id}`, {
+      method: "PUT",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, title, content, send_at, embed }),
+    });
+    const data = await response.json();
+    return addSuccess(data, response);
+  }
+
+  /**
+   * Delete an announcement
+   * @param id {number} the primary key
+   * @returns {Promise<boolean>}
+   */
+  static async delete(id) {
+    const response = await fetch(`/api/announcements/${id}`, { method: "DELETE" });
+    return response.status === 200;
+  }
+}
+
 export class CannedResponse {
   /**
    * Get a list of all the canned responses
