@@ -1,9 +1,9 @@
 from pydantic import BaseModel, validator
-from typing import List
+from typing import List, Optional
 
 
 class BotSettings(BaseModel):
-    log_file: str = "discord.log"
+    log_file: Optional[str]
 
     disabled_extensions: List[str] = []
 

@@ -20,12 +20,13 @@ def initialize():
     logger.addHandler(stdout_handler)
 
     # Log to file at DEBUG
-    file_handler = logging.FileHandler(
-        filename=SETTINGS.bot.log_file, encoding="utf-8", mode="w"
-    )
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(LOG_FORMAT)
-    logger.addHandler(file_handler)
+    if SETTINGS.bot.log_file:
+        file_handler = logging.FileHandler(
+            filename=SETTINGS.bot.log_file, encoding="utf-8", mode="w"
+        )
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(LOG_FORMAT)
+        logger.addHandler(file_handler)
 
 
 def get(name=""):
