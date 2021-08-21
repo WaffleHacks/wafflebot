@@ -54,7 +54,8 @@ async def on_error(ctx: Context, exception: Exception):
 
     else:
         # Log the error
-        logger.get().error(f"{type(exception).__name__}: {exception}")
+        name = "extensions." + ctx.command.name if ctx.command else ""
+        logger.get(name).error(f"{type(exception).__name__}: {exception}")
 
         # Log the full traceback if enabled
         if SETTINGS.full_errors:

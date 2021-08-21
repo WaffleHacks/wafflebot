@@ -5,19 +5,17 @@ from discord.ext.commands import Bot, Cog, Context, command
 from typing import List, Optional
 
 from common import CONFIG, SETTINGS, ConfigKey
-from .. import embeds
-from ..logger import get as get_logger
+from .. import embeds, logger
 from ..permissions import has_role
 
 DESCRIPTION = (
     "Only allow participants registered in Hackathon Manager to view the full server"
 )
+LOGGER = logger.get("extensions.verification")
 
 
 class Verification(Cog):
     def __init__(self):
-        self.logger = get_logger("extensions.verification")
-
         # Setup the HTTP session
         self.__session = ClientSession()
         self.__token: Optional[str] = None
@@ -25,13 +23,13 @@ class Verification(Cog):
         # Start the token refresher and manually call it once
         self.renew_token.start()
 
-        self.logger.info("loaded verification commands")
+        LOGGER.info("loaded verification commands")
 
     def cog_unload(self):
         # Stop the refresher
         self.renew_token.stop()
 
-        self.logger.info("unloaded verification commands")
+        LOGGER.info("unloaded verification commands")
 
     async def __shutdown_session(self):
         await self.__session.close()
@@ -52,7 +50,7 @@ class Verification(Cog):
         )
 
         if response.status != 200:
-            self.logger.error(
+            LOGGER.error(
                 f"failed to renew token: ({response.status}) {await response.text()}"
             )
             self.__token = None
@@ -60,7 +58,7 @@ class Verification(Cog):
 
         content = await response.json()
         self.__token = content.get("access_token")
-        self.logger.debug("successfully renewed authentication token")
+        LOGGER.debug("successfully renewed authentication token")
 
     async def list_usernames(self) -> List[str]:
         """
@@ -107,6 +105,9 @@ class Verification(Cog):
         username = f"{member.name}#{member.discriminator}"
         if await self.username_exists(username):
             await member.add_roles(role)
+            LOGGER.info(f'marked "{username}" as verified')
+        else:
+            LOGGER.info(f'failed to verify "{username}", not yet registered')
 
     @command(name="reverify")
     @has_role(ConfigKey.PanelAccessRole)

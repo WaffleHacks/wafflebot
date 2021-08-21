@@ -4,13 +4,11 @@ from enum import Enum
 from typing import List, Optional, Union
 
 from common import CONFIG, ConfigKey
-from .. import embeds
-from ..logger import get as get_logger
+from .. import embeds, logger
 from ..permissions import has_role
 
 DESCRIPTION = "Change the bot's settings"
-
-logger = get_logger("extensions.settings")
+LOGGER = logger.get("extensions.settings")
 
 
 class Action(Enum):
@@ -75,6 +73,8 @@ async def single_config_helper(
     elif action == Action.Get:
         result_id = await getattr(CONFIG, attr_name)()
         result = resolve_object(ctx.guild, result_id)
+        LOGGER.debug("attempted to get object as discord object")
+
         if result is None:
             await ctx.reply(
                 embed=embeds.message(
@@ -87,6 +87,8 @@ async def single_config_helper(
                 allowed_mentions=None,
                 mention_author=False,
             )
+
+        LOGGER.info(f'got configuration value for "{name}"')
 
     # Set the current value
     else:
@@ -108,6 +110,8 @@ async def single_config_helper(
             mention_author=False,
         )
 
+        LOGGER.info(f'updated configuration value for "{name}"')
+
 
 async def send_config_array(ctx: Context, name: str, attr_name: str):
     """
@@ -123,6 +127,8 @@ async def send_config_array(ctx: Context, name: str, attr_name: str):
     message = f"The {name} are currently set to: "
     for result_id in result_ids:
         result = resolve_object(ctx.guild, result_id)
+        LOGGER.debug("attempted to get object as discord object")
+
         if result is None:
             message += f"`{result_id}` (may not exist), "
         else:
@@ -152,6 +158,7 @@ async def array_config_helper(
     # Get the current values
     if action == Action.Get:
         await send_config_array(ctx, name, attr_name)
+        LOGGER.info(f'got configuration value for "{name}"')
 
     # Ensure there is at least 1 value present
     elif values is None:
@@ -179,6 +186,8 @@ async def array_config_helper(
 
         # Display the updated values
         await send_config_array(ctx, name, attr_name)
+
+        LOGGER.info(f'updated configuration value for "{name}"')
 
 
 @group()
@@ -269,7 +278,7 @@ def setup(bot: Bot):
     :param bot: the underlying bot
     """
     bot.add_command(settings)
-    logger.info("loaded settings commands")
+    LOGGER.info("loaded settings commands")
 
 
 def teardown(bot: Bot):
@@ -278,4 +287,4 @@ def teardown(bot: Bot):
     :param bot: the underlying bot
     """
     bot.remove_command("settings")
-    logger.info("unloaded settings commands")
+    LOGGER.info("unloaded settings commands")

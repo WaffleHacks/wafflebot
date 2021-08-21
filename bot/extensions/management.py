@@ -9,13 +9,11 @@ from discord.ext.commands import (
     NoEntryPointError,
 )
 
-from .. import embeds
-from ..logger import get as get_logger
+from .. import embeds, logger
 from ..permissions import has_role, ConfigKey
 
 DESCRIPTION = "Commands for managing the bot"
-
-logger = get_logger("extensions.management")
+LOGGER = logger.get("extensions.management")
 
 
 @group()
@@ -59,13 +57,13 @@ async def enable_extension(ctx: Context, package: str):
             mention_author=False,
         )
     except ExtensionAlreadyLoaded:
-        logger.warning(f"already loaded extension '{package}'")
+        LOGGER.warning(f"already loaded extension '{package}'")
         await ctx.reply(
             embed=embeds.message(f"That extension is already enabled!"),
             mention_author=False,
         )
     except (ExtensionFailed, NoEntryPointError) as e:
-        logger.error(f"failed to load extension '{package}': {e}")
+        LOGGER.error(f"failed to load extension '{package}': {e}")
         await ctx.reply(
             embed=embeds.message(
                 f"An error occurred while enabling extension `{package}`: {e}."
@@ -73,7 +71,7 @@ async def enable_extension(ctx: Context, package: str):
             mention_author=False,
         )
     except ExtensionNotFound:
-        logger.error(f"extension '{package}' could not be found")
+        LOGGER.error(f"extension '{package}' could not be found")
         await ctx.reply(
             embed=embeds.message(
                 f"Couldn't find extension `{package}`, check the name and try again."
@@ -97,7 +95,7 @@ async def reload_extension(ctx: Context, package: str):
             mention_author=False,
         )
     except ExtensionNotFound:
-        logger.error(f"extension '{package}' could not be found")
+        LOGGER.error(f"extension '{package}' could not be found")
         await ctx.reply(
             embed=embeds.message(
                 f"Couldn't find extension `{package}`, check the name and try again."
@@ -105,13 +103,13 @@ async def reload_extension(ctx: Context, package: str):
             mention_author=False,
         )
     except (ExtensionFailed, NoEntryPointError) as e:
-        logger.error(f"failed to load extension '{package}': {e}")
+        LOGGER.error(f"failed to load extension '{package}': {e}")
         await ctx.reply(
             embed=embeds.message(f"Failed to load extension: `{package}`: {e}."),
             mention_author=False,
         )
     except ExtensionNotLoaded:
-        logger.error(f"extension '{package}' is not loaded")
+        LOGGER.error(f"extension '{package}' is not loaded")
         await ctx.reply(
             embed=embeds.message(f"Cannot reload disabled extension `{package}`."),
             mention_author=False,
@@ -133,7 +131,7 @@ async def disable_extension(ctx: Context, package: str):
             mention_author=False,
         )
     except ExtensionNotLoaded:
-        logger.error(f"extension '{package}' is not loaded")
+        LOGGER.error(f"extension '{package}' is not loaded")
         await ctx.reply(
             embed=embeds.message(f"Cannot disable a disabled extension `{package}`."),
             mention_author=False,
@@ -166,9 +164,9 @@ async def list_extensions(ctx: Context):
 
 def setup(bot: Bot):
     bot.add_command(management)
-    logger.info("loaded management commands")
+    LOGGER.info("loaded management commands")
 
 
 def teardown(bot: Bot):
     bot.remove_command("management")
-    logger.info("unloaded management commands")
+    LOGGER.info("unloaded management commands")

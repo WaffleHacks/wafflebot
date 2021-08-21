@@ -7,10 +7,10 @@ from pytz import utc
 from typing import Dict, List, Optional
 
 from common import SETTINGS
-from .. import embeds
-from ..logger import get as get_logger
+from .. import embeds, logger
 
 DESCRIPTION = "Get information about events during the hackathon"
+LOGGER = logger.get("extensions.events")
 
 
 class EventResponse(BaseModel):
@@ -22,8 +22,6 @@ class EventResponse(BaseModel):
 
 class Events(Cog):
     def __init__(self):
-        self.logger = get_logger("extensions.events")
-
         # Setup the HTTP session
         self.calendar = SETTINGS.bot.teamup_calendar
         self.__session = ClientSession(
@@ -31,10 +29,10 @@ class Events(Cog):
             raise_for_status=True,
         )
 
-        self.logger.info("loaded event commands")
+        LOGGER.info("loaded event commands")
 
     def cog_unload(self):
-        self.logger.info("unloaded event commands")
+        LOGGER.info("unloaded event commands")
 
     @cached_property
     def query(self) -> Dict[str, str]:
@@ -60,6 +58,9 @@ class Events(Cog):
 
         content = await response.json()
         events = content.get("events")
+
+        LOGGER.debug("got list of all events")
+
         if events is None:
             return []
         return list(map(EventResponse.parse_obj, events))
@@ -100,6 +101,7 @@ class Events(Cog):
         embed.add_field(name="Duration", value=duration, inline=True)
 
         await ctx.reply(mention_author=False, embed=embed)
+        LOGGER.info("sent the next event from TeamUp")
 
     @command()
     async def events(self, ctx: Context):
@@ -119,6 +121,7 @@ class Events(Cog):
             )
 
         await ctx.reply(mention_author=False, embed=embed)
+        LOGGER.info("sent list of all events")
 
 
 def setup(bot: Bot):

@@ -7,16 +7,15 @@ from typing import List, Optional
 
 from common import CONFIG, SETTINGS
 from common.database import db_context, Announcement
-from .. import embeds
-from ..logger import get as get_logger
+from .. import embeds, logger
 
 
 DESCRIPTION = "Automatically broadcast announcements at a given time"
+LOGGER = logger.get("extensions.announcer")
 
 
 class Announcer(Cog):
     def __init__(self, bot: Bot):
-        self.logger = get_logger("extensions.announcer")
         self.bot = bot
 
         self.messages = []  # type: List[Announcement]
@@ -26,13 +25,13 @@ class Announcer(Cog):
         self.refresh.start()
         self.check.start()
 
-        self.logger.info("loaded announcer tasks")
+        LOGGER.info("loaded announcer tasks")
 
     def cog_unload(self):
         self.refresh.stop()
         self.check.stop()
 
-        self.logger.info("unloaded announcer tasks")
+        LOGGER.info("unloaded announcer tasks")
 
     @tasks.loop(minutes=5)
     async def refresh(self):
@@ -46,6 +45,7 @@ class Announcer(Cog):
             result = await db.execute(statement)
 
         self.messages = result.scalars().all()
+        LOGGER.debug("refreshed internal message cache")
 
     @tasks.loop(minutes=1)
     async def check(self):
@@ -57,15 +57,19 @@ class Announcer(Cog):
                 await self.send(message)
                 del self.messages[i]
 
+                LOGGER.info(f"successfully send message {message.id}")
+
     async def send(self, message: Announcement):
         """
         Announce a message
         :param message: the message object to announce
         """
         if self.channel is None:
+            LOGGER.info("channel not yet initialized, initializing...")
             guild = await self.bot.fetch_guild(SETTINGS.discord_guild_id)
             channel_id = await CONFIG.announcements_channel()
             self.channel = await guild.fetch_channel(channel_id)
+            LOGGER.info("retrieved channel instance")
 
         if not message.embed:
             await self.channel.send(message.content)

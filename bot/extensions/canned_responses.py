@@ -3,19 +3,18 @@ from discord.ext.commands import Bot, Cog
 from sqlalchemy.future import select
 
 from common.database import db_context, CannedResponse as Canned
-from .. import embeds
-from ..logger import get as get_logger
+from .. import embeds, logger
 
 DESCRIPTION = "Pre-made responses for commonly requested information"
+LOGGER = logger.get("extensions.canned_responses")
 
 
 class CannedResponses(Cog):
     def __init__(self):
-        self.logger = get_logger("extensions.canned_responses")
-        self.logger.info("loaded canned response commands")
+        LOGGER.info("loaded canned response commands")
 
     def cog_unload(self):
-        self.logger.info("unloaded canned response commands")
+        LOGGER.info("unloaded canned response commands")
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -32,7 +31,7 @@ class CannedResponses(Cog):
 
         # Don't respond if no model
         if response is None:
-            self.logger.info(f"requested canned response '{key}' does not exist")
+            LOGGER.info(f"requested canned response '{key}' does not exist")
             return
 
         # Build the response
@@ -45,7 +44,7 @@ class CannedResponses(Cog):
             embed.add_field(name=name, value=content, inline=False)
 
         await message.reply(embed=embed, mention_author=False)
-        self.logger.info(f"generated response for '{key}'")
+        LOGGER.info(f"sent response for '{key}'")
 
 
 def setup(bot: Bot):
