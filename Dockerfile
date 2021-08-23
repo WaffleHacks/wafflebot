@@ -94,7 +94,6 @@ FROM common as web
 # Add project files
 COPY --chown=app --from=frontend /frontend/public ./frontend/public
 COPY --chown=app api ./api
-COPY --chown=app emojis.json ./
 
 # Startup configuration
 EXPOSE 8000
