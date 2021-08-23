@@ -3,7 +3,7 @@ from discord.ext.commands import group, Bot, Context
 from enum import Enum
 from typing import List, Optional, Union
 
-from common import CONFIG, ConfigKey
+from common import REDIS, Key
 from .. import embeds, logger
 from ..permissions import has_role
 
@@ -71,7 +71,7 @@ async def single_config_helper(
 
     # Get the current value
     elif action == Action.Get:
-        result_id = await getattr(CONFIG, attr_name)()
+        result_id = await getattr(REDIS.kv, attr_name)()
         result = resolve_object(ctx.guild, result_id)
         LOGGER.debug("attempted to get object as discord object")
 
@@ -101,7 +101,7 @@ async def single_config_helper(
             return
 
         # Set the value
-        await getattr(CONFIG, attr_name)(value.id)
+        await getattr(REDIS.kv, attr_name)(value.id)
         await ctx.reply(
             embed=embeds.message(
                 f":white_check_mark: The {name} is now {value.mention}"
@@ -121,7 +121,7 @@ async def send_config_array(ctx: Context, name: str, attr_name: str):
     :param attr_name: the function to call
     """
     # Get the ids
-    result_ids = await getattr(CONFIG, attr_name)()
+    result_ids = await getattr(REDIS.kv, attr_name)()
 
     # Construct the resulting message
     message = f"The {name} are currently set to: "
@@ -182,7 +182,7 @@ async def array_config_helper(
         }[action].format(attr_name)
 
         # Run the action
-        await getattr(CONFIG, method)(value_ids)
+        await getattr(REDIS.kv, method)(value_ids)
 
         # Display the updated values
         await send_config_array(ctx, name, attr_name)
@@ -191,7 +191,7 @@ async def array_config_helper(
 
 
 @group()
-@has_role(ConfigKey.PanelAccessRole)
+@has_role(Key.PanelAccessRole)
 async def settings(ctx: Context):
     """
     Settings management group
@@ -226,7 +226,7 @@ async def settings(ctx: Context):
 
 
 @settings.command(name="management-role")
-@has_role(ConfigKey.ManagementRole)
+@has_role(Key.ManagementRole)
 async def management_role(ctx: Context, action: Action, value: Optional[Role]):
     """
     Get/set the bot management role

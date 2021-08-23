@@ -4,7 +4,7 @@ from discord.ext import tasks
 from discord.ext.commands import Bot, Cog, Context, command
 from typing import List, Optional
 
-from common import CONFIG, SETTINGS, ConfigKey
+from common import REDIS, SETTINGS, Key
 from .. import embeds, logger
 from ..permissions import has_role
 
@@ -99,7 +99,7 @@ class Verification(Cog):
         Check if the user is already registered and admit them
         :param member: the member to check
         """
-        role = Object(await CONFIG.registered_role())
+        role = Object(await REDIS.kv.registered_role())
 
         # Add the role to the user
         username = f"{member.name}#{member.discriminator}"
@@ -110,7 +110,7 @@ class Verification(Cog):
             LOGGER.info(f'failed to verify "{username}", not yet registered')
 
     @command(name="reverify")
-    @has_role(ConfigKey.PanelAccessRole)
+    @has_role(Key.PanelAccessRole)
     async def reverify(self, ctx: Context):
         """
         Re-verify every member currently in the server
@@ -118,11 +118,9 @@ class Verification(Cog):
         """
         # Get the roles to ignore and the role to add/remove
         ignored = set(
-            await CONFIG.get_multiple(
-                ConfigKey.PanelAccessRole, ConfigKey.ManagementRole
-            )
+            await REDIS.kv.get_multiple(Key.PanelAccessRole, Key.ManagementRole)
         )
-        verified = Object(await CONFIG.registered_role())
+        verified = Object(await REDIS.kv.registered_role())
 
         # Get all the known usernames
         usernames = await self.list_usernames()

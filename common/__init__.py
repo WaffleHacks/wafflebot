@@ -1,4 +1,4 @@
-from .config import Config, ConfigKey
+from .redis import Redis, Key
 from .settings import load_settings
 
 # Settings vs Config
@@ -10,4 +10,4 @@ from .settings import load_settings
 # to be accessed frequently.
 
 SETTINGS = load_settings()
-CONFIG = Config(SETTINGS.redis_url)
+REDIS = Redis(SETTINGS.redis_url)

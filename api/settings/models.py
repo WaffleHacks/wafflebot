@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 from typing import List, Union
 
-from common.config import ConfigKey, Value
+from common.redis.kv import Key, Type
 
 
 class SettingResponse(BaseModel):
-    key: ConfigKey
+    key: Key
     value: Union[List[str], str]
-    type: Value
+    type: Type
 
 
 class SettingUpdate(BaseModel):

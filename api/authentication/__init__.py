@@ -1,13 +1,13 @@
 from aiohttp import ClientSession
 from discord import Role
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from functools import lru_cache
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse, Response, URL
 from typing import Dict, List, Optional
 
-from common import CONFIG, SETTINGS
+from common import REDIS, SETTINGS
 from common.database import get_db, User
 from .models import UserInfo
 from .oauth import get_discord_client
@@ -64,7 +64,7 @@ async def callback(
     roles = list(map(lambda r: r.id, await get_user_roles(user_id)))
 
     # Determine if the user has panel access
-    if (await CONFIG.panel_access_role()) not in roles:
+    if (await REDIS.kv.panel_access_role()) not in roles:
         return RedirectResponse("/login?error=unauthorized")
 
     # Get all the user's guilds
@@ -82,7 +82,7 @@ async def callback(
             guilds,
         )
     )
-    is_admin = (await CONFIG.management_role()) in roles or is_owner
+    is_admin = (await REDIS.kv.management_role()) in roles or is_owner
 
     # Save the user's info to the database
     user = User(

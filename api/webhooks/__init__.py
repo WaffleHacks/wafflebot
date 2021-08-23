@@ -2,7 +2,7 @@ from discord import Object
 from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from typing import Optional, Union
 
-from common import CONFIG, SETTINGS
+from common import REDIS, SETTINGS
 from .models import Webhook, TestingWebhook
 from ..utils.client import with_discord
 
@@ -27,7 +27,7 @@ async def discord_username_changed(
 
     guild = await discord.fetch_guild(SETTINGS.discord_guild_id)
 
-    role_id = await CONFIG.registered_role()
+    role_id = await REDIS.kv.registered_role()
     role = Object(role_id)
 
     async for member in guild.fetch_members():

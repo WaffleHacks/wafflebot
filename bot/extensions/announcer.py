@@ -5,7 +5,7 @@ from discord.ext.commands import Bot, Cog
 from sqlalchemy.future import select
 from typing import List, Optional
 
-from common import CONFIG, SETTINGS
+from common import REDIS, SETTINGS
 from common.database import db_context, Announcement
 from .. import embeds, logger
 
@@ -67,7 +67,7 @@ class Announcer(Cog):
         if self.channel is None:
             LOGGER.info("channel not yet initialized, initializing...")
             guild = await self.bot.fetch_guild(SETTINGS.discord_guild_id)
-            channel_id = await CONFIG.announcements_channel()
+            channel_id = await REDIS.kv.announcements_channel()
             self.channel = await guild.fetch_channel(channel_id)
             LOGGER.info("retrieved channel instance")
 

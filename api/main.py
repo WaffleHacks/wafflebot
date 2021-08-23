@@ -3,7 +3,7 @@ from fastapi.responses import UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
-from common import CONFIG, SETTINGS
+from common import REDIS, SETTINGS
 from .announcements import router as announcements_router
 from .authentication import router as authentication_router
 from .canned_responses import router as canned_responses_router
@@ -59,11 +59,11 @@ async def http_exception_handler(_request: Request, exception: StarletteHTTPExce
 
 @app.on_event("startup")
 async def on_startup():
-    await CONFIG.connect()
+    await REDIS.connect()
     await DISCORD.login(SETTINGS.discord_token)
 
 
 @app.on_event("shutdown")
 async def on_shutdown():
-    await CONFIG.disconnect()
+    await REDIS.disconnect()
     await DISCORD.logout()

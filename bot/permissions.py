@@ -1,9 +1,9 @@
 from discord.ext.commands import check, Context
 
-from common import CONFIG, ConfigKey
+from common import REDIS, Key
 
 
-def has_role(*keys: ConfigKey):
+def has_role(*keys: Key):
     """
     Require the executor to have certain role
     :param keys: the roles to query for
@@ -11,7 +11,7 @@ def has_role(*keys: ConfigKey):
 
     async def predicate(ctx: Context):
         # Find the roles that are required to use the command
-        result = await CONFIG.get_multiple(*keys)
+        result = await REDIS.kv.get_multiple(*keys)
         required_roles = set(result)
 
         # Find all roles for a user

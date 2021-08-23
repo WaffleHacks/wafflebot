@@ -2,7 +2,7 @@ import asyncio
 import signal
 import sys
 
-from common import CONFIG, SETTINGS
+from common import REDIS, SETTINGS
 from . import logger
 from .bot import bot
 
@@ -96,7 +96,7 @@ def main():
     logger.get().info("starting bot")
 
     # Connect to Redis
-    loop.run_until_complete(CONFIG.connect())
+    loop.run_until_complete(REDIS.connect())
     logger.get().info("connected to redis")
 
     # Run the bot
@@ -105,7 +105,7 @@ def main():
     logger.get().info("bot exited gracefully. good bye!")
 
     # Disconnect from Redis
-    loop.run_until_complete(CONFIG.disconnect())
+    loop.run_until_complete(REDIS.disconnect())
     logger.get().info("disconnected from redis")
 
     # Shutdown the event loop and cleanup tasks
