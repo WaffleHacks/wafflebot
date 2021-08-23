@@ -9,3 +9,7 @@ class Questionnaire(BaseModel):
 class Webhook(BaseModel):
     type: Literal["questionnaire_discord", "questionnaire_pending"]
     questionnaire: Questionnaire
+
+
+class TestingWebhook(BaseModel):
+    type: Literal["testing"]

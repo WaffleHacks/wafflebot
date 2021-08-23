@@ -8,5 +8,7 @@ class ApiSettings(BaseModel):
     discord_client_id: str
     discord_client_secret: DiscordClientSecret
 
+    webhook_secret: str
+
     class Config:
         env_prefix = "API_"
