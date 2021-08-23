@@ -9,6 +9,7 @@ from .authentication import router as authentication_router
 from .canned_responses import router as canned_responses_router
 from .settings import router as settings_router
 from .static import router as static_router
+from .webhooks import router as webhooks_router
 from .utils.client import DISCORD
 from .utils.session import is_logged_in
 
@@ -40,6 +41,7 @@ api.include_router(
     tags=["settings"],
     dependencies=[Depends(is_logged_in)],
 )
+api.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 
 # Include routers
 app.include_router(api)
