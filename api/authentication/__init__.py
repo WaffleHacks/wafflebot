@@ -78,7 +78,7 @@ async def callback(
     # Determine if the user has admin access
     is_owner = any(
         map(
-            lambda g: g.get("id") == str(SETTINGS.api.guild_id) and g.get("owner"),
+            lambda g: g.get("id") == str(SETTINGS.discord_guild_id) and g.get("owner"),
             guilds,
         )
     )
