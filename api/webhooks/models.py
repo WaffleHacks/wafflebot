@@ -2,10 +2,10 @@ from pydantic import BaseModel
 from typing import Literal
 
 
-class UpdateDiscordQuestionnaire(BaseModel):
+class Questionnaire(BaseModel):
     discord: str
 
 
-class UpdateDiscord(BaseModel):
-    type: Literal["questionnaire_discord"]
-    questionnaire: UpdateDiscordQuestionnaire
+class Webhook(BaseModel):
+    type: Literal["questionnaire_discord", "questionnaire_pending"]
+    questionnaire: Questionnaire

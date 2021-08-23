@@ -2,14 +2,14 @@ from discord import Object
 from fastapi import APIRouter, Depends, Response
 
 from common import CONFIG, SETTINGS
-from .models import UpdateDiscord
+from .models import Webhook
 from ..utils.client import with_discord
 
 router = APIRouter()
 
 
-@router.post("/hackathon-manager/discord", response_model=None, status_code=204)
-async def discord_update(body: UpdateDiscord, discord=Depends(with_discord)):
+@router.post("/hackathon-manager", response_model=None, status_code=204)
+async def discord_username_changed(body: Webhook, discord=Depends(with_discord)):
     guild = await discord.fetch_guild(SETTINGS.discord_guild_id)
 
     role_id = await CONFIG.registered_role()
