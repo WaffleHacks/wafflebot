@@ -23,7 +23,7 @@ async def get_user_roles(user_id: int) -> List[Role]:
     Get a user's roles from Discord
     :param user_id: the id to get roles for
     """
-    guild = await DISCORD.fetch_guild(SETTINGS.api.guild_id)
+    guild = await DISCORD.fetch_guild(SETTINGS.discord_guild_id)
     user = await guild.fetch_member(user_id)
     return user.roles
 
