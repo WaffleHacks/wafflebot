@@ -5,6 +5,7 @@ from sqlalchemy.future import select
 from typing import List
 
 from common.database import get_db, Announcement
+from common.observability import with_transaction
 from .models import (
     Announcement as AnnouncementModel,
     AnnouncementIn,
@@ -15,6 +16,7 @@ router = APIRouter()
 
 
 @router.get("/", response_model=List[AnnouncementModel])
+@with_transaction("announcements.list")
 async def list_announcements(db: AsyncSession = Depends(get_db)):
     statement = select(Announcement)
     result = await db.execute(statement)
@@ -23,6 +25,7 @@ async def list_announcements(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/", response_model=AnnouncementModel)
+@with_transaction("announcements.create")
 async def create(announcement: AnnouncementIn, db: AsyncSession = Depends(get_db)):
     try:
         # Extract the fields
@@ -40,6 +43,7 @@ async def create(announcement: AnnouncementIn, db: AsyncSession = Depends(get_db
 
 
 @router.put("/{primary_key}", response_model=AnnouncementModel)
+@with_transaction("announcements.update")
 async def update(
     primary_key: int, fields: AnnouncementUpdate, db: AsyncSession = Depends(get_db)
 ):
@@ -76,6 +80,7 @@ async def update(
 
 
 @router.delete("/{primary_key}")
+@with_transaction("announcements.delete")
 async def delete(primary_key: int, db: AsyncSession = Depends(get_db)):
     # Get the announcement
     announcement = await db.get(Announcement, primary_key)

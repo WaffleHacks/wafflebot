@@ -1,7 +1,8 @@
 from aiohttp import ClientSession
 from discord import Role
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from functools import lru_cache
+from sentry_sdk import start_span
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse, Response, URL
@@ -9,6 +10,7 @@ from typing import Dict, List, Optional
 
 from common import CONFIG, SETTINGS
 from common.database import get_db, User
+from common.observability import with_transaction
 from .models import UserInfo
 from .oauth import get_discord_client
 from ..utils.session import get_session, is_logged_in, Session
@@ -29,6 +31,7 @@ async def get_user_roles(user_id: int) -> List[Role]:
 
 
 @router.get("/login")
+@with_transaction("authentication.login")
 async def login(request: Request):
     """
     Initiate the OAuth2 login flow
@@ -38,6 +41,7 @@ async def login(request: Request):
 
 
 @router.get("/callback")
+@with_transaction("authentication.callback")
 async def callback(
     request: Request,
     code: str = None,
@@ -49,40 +53,47 @@ async def callback(
     """
     client = get_discord_client()
 
-    # Get the authorization token
-    if code:
-        token = await client.authorize_access_token(request)
-    else:
-        return RedirectResponse(URL("/login").include_query_params(error=error))
+    with start_span(op="oauth"):
+        with start_span(op="oauth.authorization_token"):
+            # Get the authorization token
+            if code:
+                token = await client.authorize_access_token(request)
+            else:
+                return RedirectResponse(URL("/login").include_query_params(error=error))
 
-    # Get the user's info
-    client.token = token
-    user_info = await client.userinfo(token=token)
-    user_id = int(user_info.get("id"))
+        with start_span(op="oauth.user_info"):
+            # Get the user's info
+            client.token = token
+            user_info = await client.userinfo(token=token)
+            user_id = int(user_info.get("id"))
 
-    # Get the user's role ids
-    roles = list(map(lambda r: r.id, await get_user_roles(user_id)))
+    with start_span(op="permissions"):
+        with start_span(op="permissions.access"):
+            # Get the user's role ids
+            roles = list(map(lambda r: r.id, await get_user_roles(user_id)))
 
-    # Determine if the user has panel access
-    if (await CONFIG.panel_access_role()) not in roles:
-        return RedirectResponse("/login?error=unauthorized")
+            # Determine if the user has panel access
+            if (await CONFIG.panel_access_role()) not in roles:
+                return RedirectResponse("/login?error=unauthorized")
 
-    # Get all the user's guilds
-    async with ClientSession() as session:
-        async with session.get(
-            "https://discord.com/api/v8/users/@me/guilds",
-            headers={"Authorization": f"Bearer {token['access_token']}"},
-        ) as response:
-            guilds = await response.json()
+        with start_span(op="permissions.admin"):
+            # Get all the user's guilds
+            async with ClientSession() as session:
+                async with session.get(
+                    "https://discord.com/api/v8/users/@me/guilds",
+                    headers={"Authorization": f"Bearer {token['access_token']}"},
+                ) as response:
+                    guilds = await response.json()
 
-    # Determine if the user has admin access
-    is_owner = any(
-        map(
-            lambda g: g.get("id") == str(SETTINGS.discord_guild_id) and g.get("owner"),
-            guilds,
-        )
-    )
-    is_admin = (await CONFIG.management_role()) in roles or is_owner
+            # Determine if the user has admin access
+            is_owner = any(
+                map(
+                    lambda g: g.get("id") == str(SETTINGS.discord_guild_id)
+                    and g.get("owner"),
+                    guilds,
+                )
+            )
+            is_admin = (await CONFIG.management_role()) in roles or is_owner
 
     # Save the user's info to the database
     user = User(
@@ -109,6 +120,7 @@ async def callback(
 
 
 @router.get("/logout", status_code=204)
+@with_transaction("authentication.logout")
 async def logout(session=Depends(get_session)):
     """
     Logout out a user
@@ -122,6 +134,7 @@ async def logout(session=Depends(get_session)):
 
 
 @router.get("/me", response_model=UserInfo)
+@with_transaction("authentication.me")
 async def me(
     _=Depends(is_logged_in),
     user: Dict = Depends(Session("user")),

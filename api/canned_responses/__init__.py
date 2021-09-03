@@ -5,6 +5,7 @@ from sqlalchemy.future import select
 from typing import List
 
 from common.database import get_db, CannedResponse
+from common.observability import with_transaction
 from .models import (
     CannedResponse as CannedResponseModel,
     CannedResponseIn,
@@ -15,6 +16,7 @@ router = APIRouter()
 
 
 @router.get("/", response_model=List[CannedResponseModel])
+@with_transaction("canned_responses.list")
 async def list_responses(db: AsyncSession = Depends(get_db)):
     statement = select(CannedResponse)
     result = await db.execute(statement)
@@ -23,6 +25,7 @@ async def list_responses(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/")
+@with_transaction("canned_responses.create")
 async def create(response: CannedResponseIn, db: AsyncSession = Depends(get_db)):
     try:
         # Extract the fields
@@ -38,6 +41,7 @@ async def create(response: CannedResponseIn, db: AsyncSession = Depends(get_db))
 
 
 @router.put("/{primary_key}", response_model=CannedResponseModel)
+@with_transaction("canned_responses.update")
 async def update(
     primary_key: int, fields: CannedResponseUpdate, db: AsyncSession = Depends(get_db)
 ):
@@ -67,6 +71,7 @@ async def update(
 
 
 @router.delete("/{primary_key}")
+@with_transaction("canned_responses.delete")
 async def delete(primary_key: int, db: AsyncSession = Depends(get_db)):
     # Get the response
     response = await db.get(CannedResponse, primary_key)
