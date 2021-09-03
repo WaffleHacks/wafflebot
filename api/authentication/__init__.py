@@ -1,7 +1,6 @@
 from aiohttp import ClientSession
 from discord import Role
 from fastapi import APIRouter, Depends, Query, Request
-from functools import lru_cache
 from sentry_sdk import start_span
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +18,6 @@ from ..utils.client import DISCORD
 router = APIRouter()
 
 
-@lru_cache(maxsize=4)
 async def get_user_roles(user_id: int) -> List[Role]:
     """
     Get a user's roles from Discord
