@@ -58,6 +58,7 @@ jobs:
 
       - name: Web - Create Sentry release
         uses: getsentry/action-release@v1.1.6
+        if: github.ref == 'refs/heads/master'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
@@ -92,6 +93,7 @@ jobs:
 
       - name: Bot - Create Sentry release
         uses: getsentry/action-release@v1.1.6
+        if: github.ref == 'refs/heads/master'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
