@@ -21,7 +21,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-buildx-
 
@@ -56,6 +56,15 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
+      - name: Web - Create Sentry release
+        uses: getsentry/action-release@1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.WEB_SENTRY_PROJECT }}
+        with:
+          environment: production
+
       - name: Bot - Image metadata
         id: bot_meta
         uses: docker/metadata-action@v3
@@ -80,6 +89,15 @@ jobs:
           target: bot
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+      - name: Bot - Create Sentry release
+        uses: getsentry/action-release@1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.BOT_SENTRY_PROJECT }}
+        with:
+          environment: production
 
       # Temp fix for:
       # https://github.com/docker/build-push-action/issues/252
