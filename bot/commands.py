@@ -11,6 +11,7 @@ from discord.ext.commands import (
     MissingRequiredArgument,
 )
 import re
+from sentry_sdk import capture_exception
 import sys
 import traceback
 from typing import get_type_hints, Dict, List, Tuple
@@ -56,6 +57,8 @@ async def on_error(ctx: Context, exception: Exception):
         # Log the error
         name = "extensions." + ctx.command.name if ctx.command else ""
         logger.get(name).error(f"{type(exception).__name__}: {exception}")
+
+        capture_exception(exception)
 
         # Log the full traceback if enabled
         if SETTINGS.full_errors:

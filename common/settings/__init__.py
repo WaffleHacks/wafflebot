@@ -2,7 +2,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from enum import Enum
 from os import environ
-from pydantic import BaseModel, ValidationError, root_validator
+from pydantic import BaseModel, root_validator
 from typing import Optional
 
 from .api import ApiSettings
@@ -32,6 +32,8 @@ class Settings(BaseModel):
 
     discord_token: DiscordToken
     discord_guild_id: int
+
+    sentry_dsn: Optional[str]
 
     event_start: datetime
     event_end: datetime

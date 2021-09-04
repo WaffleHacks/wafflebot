@@ -5,6 +5,7 @@ from discord.ext.commands import Bot, Cog, Context, command
 from typing import List, Optional
 
 from common import CONFIG, SETTINGS, ConfigKey
+from common.observability import with_transaction
 from .. import embeds, logger
 from ..permissions import has_role
 
@@ -60,6 +61,7 @@ class Verification(Cog):
         self.__token = content.get("access_token")
         LOGGER.debug("successfully renewed authentication token")
 
+    @with_transaction("verification.api", "list_usernames")
     async def list_usernames(self) -> List[str]:
         """
         Get a list of all the known usernames
@@ -75,6 +77,7 @@ class Verification(Cog):
 
         return await response.json()
 
+    @with_transaction("verification.api", "username_exists")
     async def username_exists(self, username: str) -> bool:
         """
         Check if a username is registered
@@ -94,6 +97,7 @@ class Verification(Cog):
         return response.status == 204
 
     @Cog.listener()
+    @with_transaction("verification", op="events.on_member_join")
     async def on_member_join(self, member: Member):
         """
         Check if the user is already registered and admit them
@@ -110,6 +114,7 @@ class Verification(Cog):
             LOGGER.info(f'failed to verify "{username}", not yet registered')
 
     @command(name="reverify")
+    @with_transaction("verification.reverfiy", op="command")
     @has_role(ConfigKey.PanelAccessRole)
     async def reverify(self, ctx: Context):
         """

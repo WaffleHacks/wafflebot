@@ -2,11 +2,13 @@ from datetime import datetime, timezone
 from discord import TextChannel
 from discord.ext import tasks
 from discord.ext.commands import Bot, Cog
+from sentry_sdk import start_span
 from sqlalchemy.future import select
 from typing import List, Optional
 
 from common import CONFIG, SETTINGS
 from common.database import db_context, Announcement
+from common.observability import with_transaction
 from .. import embeds, logger
 
 
@@ -34,6 +36,7 @@ class Announcer(Cog):
         LOGGER.info("unloaded announcer tasks")
 
     @tasks.loop(minutes=5)
+    @with_transaction("announcer.refresh", "task")
     async def refresh(self):
         """
         Refresh the internal message cache every 5 minutes
@@ -59,17 +62,19 @@ class Announcer(Cog):
 
                 LOGGER.info(f"successfully send message {message.id}")
 
+    @with_transaction("announcer", "send")
     async def send(self, message: Announcement):
         """
         Announce a message
         :param message: the message object to announce
         """
         if self.channel is None:
-            LOGGER.info("channel not yet initialized, initializing...")
-            guild = await self.bot.fetch_guild(SETTINGS.discord_guild_id)
-            channel_id = await CONFIG.announcements_channel()
-            self.channel = await guild.fetch_channel(channel_id)
-            LOGGER.info("retrieved channel instance")
+            with start_span(op="fetch_channel"):
+                LOGGER.info("channel not yet initialized, initializing...")
+                guild = await self.bot.fetch_guild(SETTINGS.discord_guild_id)
+                channel_id = await CONFIG.announcements_channel()
+                self.channel = await guild.fetch_channel(channel_id)
+                LOGGER.info("retrieved channel instance")
 
         if not message.embed:
             await self.channel.send(message.content)

@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException, Request
+from sentry_sdk import set_user
 import time
 from typing import Dict, List
 
@@ -18,12 +19,15 @@ async def is_logged_in(session=Depends(get_session)) -> Dict:
     """
     # Check that the user is logged in
     if not session.get("logged_in"):
+        set_user(None)
         raise HTTPException(status_code=401, detail="unauthorized")
 
     # Check that the OAuth token hasn't expired
     if time.time() > session.get("expiration"):
+        set_user(None)
         raise HTTPException(status_code=401, detail="unauthorized")
 
+    set_user({"id": session["user"]["id"], "username": session["user"]["username"]})
     return session
 
 

@@ -9,6 +9,7 @@ from discord.ext.commands import (
     NoEntryPointError,
 )
 
+from common.observability import with_transaction
 from .. import embeds, logger
 from ..permissions import has_role, ConfigKey
 
@@ -43,6 +44,7 @@ async def management(ctx: Context):
 
 
 @management.command(name="enable")
+@with_transaction("extensions.enable", "command")
 async def enable_extension(ctx: Context, package: str):
     """
     Load and enable an extension
@@ -81,6 +83,7 @@ async def enable_extension(ctx: Context, package: str):
 
 
 @management.command(name="reload")
+@with_transaction("extensions.reload", "command")
 async def reload_extension(ctx: Context, package: str):
     """
     Reload an extension
@@ -117,6 +120,7 @@ async def reload_extension(ctx: Context, package: str):
 
 
 @management.command(name="disable")
+@with_transaction("extensions.disable", "command")
 async def disable_extension(ctx: Context, package: str):
     """
     Disable and unload an extension
@@ -139,6 +143,7 @@ async def disable_extension(ctx: Context, package: str):
 
 
 @management.command(name="list")
+@with_transaction("extensions.list", "command")
 async def list_extensions(ctx: Context):
     """
     Get a list of all the loaded extensions

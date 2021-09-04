@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import UJSONResponse
+import sentry_sdk
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -15,7 +18,17 @@ from .utils.session import is_logged_in
 
 app = FastAPI(docs_url=None, swagger_ui_oauth2_redirect_url=None, redoc_url="/docs")
 
+# Integrate with Sentry
+sentry_sdk.init(
+    dsn=SETTINGS.sentry_dsn,
+    integrations=[SqlalchemyIntegration()],
+    traces_sample_rate=1.0,
+    environment="development" if SETTINGS.full_errors else "production",
+    send_default_pii=True,
+)
+
 # Register middleware
+app.add_middleware(SentryAsgiMiddleware)
 app.add_middleware(SessionMiddleware, secret_key=SETTINGS.api.secret_key)
 
 # Register API routers
@@ -57,6 +70,14 @@ async def http_exception_handler(_request: Request, exception: StarletteHTTPExce
     )
 
 
+@app.exception_handler(500)
+async def unknown_exception_handler(_request: Request, exception: Exception):
+    sentry_sdk.capture_exception(exception)
+    return UJSONResponse(
+        {"success": False, "reason": "internal server error"}, status_code=500
+    )
+
+
 @app.on_event("startup")
 async def on_startup():
     await CONFIG.connect()
@@ -66,4 +87,4 @@ async def on_startup():
 @app.on_event("shutdown")
 async def on_shutdown():
     await CONFIG.disconnect()
-    await DISCORD.logout()
+    await DISCORD.close()
