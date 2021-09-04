@@ -4,9 +4,11 @@ from discord.ext.commands import Bot, Cog, Context, command
 from functools import cached_property
 from pydantic import BaseModel
 from pytz import utc
+from sentry_sdk import start_span
 from typing import Dict, List, Optional
 
 from common import SETTINGS
+from common.observability import with_transaction
 from .. import embeds, logger
 
 DESCRIPTION = "Get information about events during the hackathon"
@@ -48,6 +50,7 @@ class Events(Cog):
             "tz": "UTC",
         }
 
+    @with_transaction("events.api", "list")
     async def list_events(self) -> List[EventResponse]:
         """
         Get a list of all the events
@@ -66,6 +69,7 @@ class Events(Cog):
         return list(map(EventResponse.parse_obj, events))
 
     @command(name="next")
+    @with_transaction("events.next_up", "command")
     async def next_up(self, ctx: Context):
         """
         Get the next event
@@ -74,36 +78,42 @@ class Events(Cog):
         # Get all the events
         all_events = await self.list_events()
 
-        # Get the next event
-        now = datetime.now(tz=utc)
-        event = next(filter(lambda e: e.start_dt > now, all_events))
+        with start_span(op="filter"):
+            # Get the next event
+            now = datetime.now(tz=utc)
+            event = next(filter(lambda e: e.start_dt > now, all_events))
 
-        # Build the response
-        embed = embeds.message(f"Up next is: {event.title}", as_title=True)
-        if event.notes:
-            embed.description = event.notes
-        embed.add_field(
-            name="Starts", value=f"<t:{int(event.start_dt.timestamp())}:R>", inline=True
-        )
+        with start_span(op="message"):
+            # Build the response
+            embed = embeds.message(f"Up next is: {event.title}", as_title=True)
+            if event.notes:
+                embed.description = event.notes
+            embed.add_field(
+                name="Starts",
+                value=f"<t:{int(event.start_dt.timestamp())}:R>",
+                inline=True,
+            )
 
-        # Calculate the duration in hours and minutes
-        total_seconds = (event.end_dt - event.start_dt).seconds
-        hours, remainder = divmod(total_seconds, 60 * 60)
-        minutes = remainder // 60
+            with start_span(op="message.format_time"):
+                # Calculate the duration in hours and minutes
+                total_seconds = (event.end_dt - event.start_dt).seconds
+                hours, remainder = divmod(total_seconds, 60 * 60)
+                minutes = remainder // 60
 
-        # Format the duration
-        duration = ""
-        if hours != 0:
-            duration += f"{hours} hour{'s' if hours > 1 else ''}"
-        if minutes != 0:
-            duration += f" {minutes} min{'s' if minutes > 1 else ''}"
+                # Format the duration
+                duration = ""
+                if hours != 0:
+                    duration += f"{hours} hour{'s' if hours > 1 else ''}"
+                if minutes != 0:
+                    duration += f" {minutes} min{'s' if minutes > 1 else ''}"
 
-        embed.add_field(name="Duration", value=duration, inline=True)
+            embed.add_field(name="Duration", value=duration, inline=True)
 
-        await ctx.reply(mention_author=False, embed=embed)
-        LOGGER.info("sent the next event from TeamUp")
+            await ctx.reply(mention_author=False, embed=embed)
+            LOGGER.info("sent the next event from TeamUp")
 
     @command()
+    @with_transaction("events.events", "command")
     async def events(self, ctx: Context):
         """
         Get a list of all the events

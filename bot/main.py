@@ -1,4 +1,6 @@
 import asyncio
+import sentry_sdk
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 import signal
 import sys
 
@@ -94,6 +96,15 @@ def main():
     """
     loop = asyncio.get_event_loop()
     logger.get().info("starting bot")
+
+    # Integrate with Sentry
+    sentry_sdk.init(
+        dsn=SETTINGS.sentry_dsn,
+        integrations=[SqlalchemyIntegration()],
+        traces_sample_rate=1.0,
+        environment="development" if SETTINGS.full_errors else "production",
+        send_default_pii=True,
+    )
 
     # Connect to Redis
     loop.run_until_complete(CONFIG.connect())

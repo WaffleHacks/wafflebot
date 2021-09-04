@@ -4,6 +4,7 @@ from enum import Enum
 from typing import List, Optional, Union
 
 from common import CONFIG, ConfigKey
+from common.observability import with_transaction
 from .. import embeds, logger
 from ..permissions import has_role
 
@@ -227,6 +228,7 @@ async def settings(ctx: Context):
 
 @settings.command(name="management-role")
 @has_role(ConfigKey.ManagementRole)
+@with_transaction("settings.management_role", "command")
 async def management_role(ctx: Context, action: Action, value: Optional[Role]):
     """
     Get/set the bot management role
@@ -238,6 +240,7 @@ async def management_role(ctx: Context, action: Action, value: Optional[Role]):
 
 
 @settings.command(name="panel-access-role")
+@with_transaction("settings.panel_access_role", "command")
 async def panel_access_role(ctx: Context, action: Action, value: Optional[Role]):
     """
     Get/set the role that has access to the panel
@@ -249,6 +252,7 @@ async def panel_access_role(ctx: Context, action: Action, value: Optional[Role])
 
 
 @settings.command(name="registered-role")
+@with_transaction("settings.registered_role", "command")
 async def registered_role(ctx: Context, action: Action, value: Optional[Role]):
     """
     Get/set the role that marks a participant as verified
@@ -260,6 +264,7 @@ async def registered_role(ctx: Context, action: Action, value: Optional[Role]):
 
 
 @settings.command(name="announcements-channel")
+@with_transaction("settings.announcements_channel", "command")
 async def announcements_channel(
     ctx: Context, action: Action, value: Optional[TextChannel]
 ):
