@@ -1,0 +1,10 @@
+addReviewers: true
+addAssignees: false
+
+reviewers:
+  - akrantz01
+  - Bisman18
+  - ethaniel0
+  - jollypolly123
+
+numberOfReviewers: 0
