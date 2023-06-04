@@ -13,7 +13,8 @@
     "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "dotenv": "^16.1.3"
+    "dotenv": "^16.1.3",
+    "winston": "^3.9.0"
   },
   "devDependencies": {
     "@types/node": "18",

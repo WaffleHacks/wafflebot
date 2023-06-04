@@ -1,5 +1,7 @@
 import 'dotenv/config';
 
+import logger from '@lib/logger';
+
 class Config {
   readonly token: string;
 
@@ -12,7 +14,7 @@ class Config {
     if (value !== undefined) return value;
 
     if (defaultValue === undefined) {
-      console.error(`missing environment variable ${name}`);
+      logger.error(`missing environment variable ${name}`);
       process.exit(1);
     } else return defaultValue;
   }
