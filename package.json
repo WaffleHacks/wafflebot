@@ -2,7 +2,7 @@
   "name": "wafflebot",
   "version": "1.0.0",
   "description": "The general purpose Discord bot for WaffleHacks",
-  "main": "dist/index.ts",
+  "main": "src/index.ts",
   "repository": "https://github.com/WaffleHacks/wafflebot",
   "license": "MIT",
   "private": true,
