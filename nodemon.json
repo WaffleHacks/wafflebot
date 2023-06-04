@@ -1,0 +1,6 @@
+{
+  "ignore": [".git", ".vscode", ".idea", "dist", "node_modules"],
+  "ext": "ts",
+  "watch": ["src/", ".env"],
+  "exec": "node -r ts-node/register ./src/index.ts"
+}
