@@ -2,6 +2,7 @@ import { LogLevel, SapphireClient } from '@sapphire/framework';
 import { GatewayIntentBits } from 'discord.js';
 
 import CONFIG from '@lib/config';
+import database from '@lib/database';
 import logger from '@lib/logger';
 
 const client = new SapphireClient({
@@ -13,4 +14,4 @@ const client = new SapphireClient({
   typing: true,
 });
 
-client.login(CONFIG.token);
+client.login(CONFIG.token).finally(() => database.$disconnect());
