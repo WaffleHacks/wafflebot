@@ -1,6 +1,8 @@
 import { Command } from '@sapphire/framework';
 import { ButtonStyle, ChannelType } from 'discord-api-types/v10';
-import { ActionRowBuilder, ButtonBuilder, channelMention } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, Client, TextChannel, channelMention } from 'discord.js';
+
+import { Settings } from '@lib/database';
 
 const UPPER_MESSAGE = `
 **Welcome to \u200b :waffle: \u200b WaffleHacks 2023!**
@@ -53,6 +55,8 @@ export class SetupVerificationCommand extends Command {
     const channel = interaction.options.getChannel('channel', true, [ChannelType.GuildText]);
     const rulesChannel = interaction.options.getChannel('rules', true, [ChannelType.GuildText]);
 
+    await this.purgeOldChannel(interaction.client);
+
     await channel.send({
       content: UPPER_MESSAGE.replace('{RULES_CHANNEL}', channelMention(rulesChannel.id)),
       flags: 'SuppressEmbeds',
@@ -68,9 +72,23 @@ export class SetupVerificationCommand extends Command {
 
     await channel.send({ content: LOWER_MESSAGE });
 
+    await Settings.setVerificationChannel(channel.id);
+
     return interaction.reply({
       content: `Successfully setup the verification channel in ${channelMention(channel.id)}`,
       ephemeral: true,
     });
+  }
+
+  private async purgeOldChannel(client: Client): Promise<void> {
+    const id = await Settings.getVerificationChannel();
+    if (id === null) return;
+
+    const channel = await client.channels.fetch(id);
+    if (channel === null || !(channel instanceof TextChannel)) return;
+
+    // We only send 3 messages, so we only need to delete 3
+    const last = await channel.messages.fetch({ limit: 3 });
+    await channel.bulkDelete(last);
   }
 }

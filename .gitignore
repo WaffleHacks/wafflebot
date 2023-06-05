@@ -251,3 +251,6 @@ dist
 
 # Ignore code-workspaces
 *.code-workspace
+
+### Project files
+src/lib/database/generated
