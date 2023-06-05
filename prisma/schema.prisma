@@ -21,6 +21,8 @@ enum SettingKey {
 
   // The ID of the verification channel
   VERIFICATION_CHANNEL
+  // The ID of the participant role
+  PARTICIPANT_ROLE
 }
 
 model Setting {
