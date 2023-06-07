@@ -1,4 +1,4 @@
-import { Command } from '@sapphire/framework';
+import { Command, CommandOptionsRunTypeEnum } from '@sapphire/framework';
 import { ButtonStyle, ChannelType } from 'discord-api-types/v10';
 import { ActionRowBuilder, ButtonBuilder, Client, TextChannel, channelMention } from 'discord.js';
 
@@ -31,6 +31,8 @@ export class SetupVerificationCommand extends Command {
     super(context, {
       ...options,
       description: 'Setup participant verification in the specified channel',
+      preconditions: ['ParticipantRoleIsSet'],
+      runIn: CommandOptionsRunTypeEnum.GuildText,
     });
   }
 
@@ -39,6 +41,7 @@ export class SetupVerificationCommand extends Command {
       builder
         .setName(this.name)
         .setDescription(this.description)
+        .setDMPermission(false)
         .addChannelOption((option) =>
           option
             .setName('channel')
