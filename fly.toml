@@ -1,0 +1,26 @@
+# fly.toml app configuration file generated for wafflehacks-wafflebot on 2023-06-08T07:38:53-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "wafflehacks-wafflebot"
+primary_region = "yyz"
+
+[build]
+  image = "us-central1-docker.pkg.dev/wafflehacks-production/internal/wafflebot:sha-SHORT_SHA"
+
+[deploy]
+  strategy = "rolling"
+
+[checks]
+  [checks.alive]
+    type = "http"
+    port = 8888
+    method = "get"
+    path = "/health"
+    protocol = "http"
+
+    grace_period = "10s"
+    interval = "15s"
+    restart_limit = 0
+    timeout = "3s"
