@@ -18,7 +18,7 @@ jobs:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-docker-buildx-${{ hashFiles('**/yarn.lock') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-docker-buildx-${{ hashFiles('**/poetry.lock') }}-
+            ${{ runner.os }}-docker-buildx-${{ hashFiles('**/yarn.lock') }}-
 
       - uses: google-github-actions/auth@v1
         id: gcp
