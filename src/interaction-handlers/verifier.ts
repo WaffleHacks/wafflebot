@@ -1,7 +1,7 @@
 import { InteractionHandler, InteractionHandlerTypes, Piece } from '@sapphire/framework';
 import { EmbedBuilder, GuildMemberRoleManager, type ModalSubmitInteraction } from 'discord.js';
 
-import { Settings } from '@lib/database';
+import { Link, Settings } from '@lib/database';
 import embeds from '@lib/embeds';
 import { Status, lookupApplicationStatusByEmail } from '@lib/portal';
 
@@ -27,12 +27,14 @@ export class ModalHandler extends InteractionHandler {
     await interaction.deferReply({ ephemeral: true });
 
     const email = interaction.fields.getTextInputValue('email');
-    const status = await lookupApplicationStatusByEmail(email);
+    const application = await lookupApplicationStatusByEmail(email);
 
-    if (status === Status.ACCEPTED) await interaction.member.roles.add(roleId);
-    else await interaction.member.roles.remove(roleId);
+    if (application.status === Status.ACCEPTED) {
+      await interaction.member.roles.add(roleId);
+      await Link.create(interaction.member.user.id, application.id as number);
+    } else await interaction.member.roles.remove(roleId);
 
-    await interaction.editReply({ embeds: [this.messageForStatus(status)] });
+    await interaction.editReply({ embeds: [this.messageForStatus(application.status)] });
   }
 
   public override parse(interaction: ModalSubmitInteraction) {
