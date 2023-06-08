@@ -5,6 +5,8 @@ import { TOKEN } from '@lib/config';
 import database from '@lib/database';
 import logger from '@lib/logger';
 
+import { startHealthcheckServer } from './healthcheck';
+
 const client = new SapphireClient({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
   logger: {
@@ -15,3 +17,4 @@ const client = new SapphireClient({
 });
 
 client.login(TOKEN).finally(() => database.$disconnect());
+startHealthcheckServer();
