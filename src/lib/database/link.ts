@@ -16,6 +16,17 @@ export class Link {
   }
 
   /**
+   * Find a participant's Discord ID by their application portal ID
+   * @param id the application portal ID to search for
+   */
+  public static async findDiscordId(id: number): Promise<string | null> {
+    const link = await prisma.link.findFirst({ where: { participant_id: id } });
+    if (link === null) return null;
+
+    return link.discord_id;
+  }
+
+  /**
    * Find a participant's ID by their Discord ID
    * @param id the Discord ID to search for
    */
