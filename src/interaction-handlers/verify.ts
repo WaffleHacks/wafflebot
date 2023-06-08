@@ -1,6 +1,5 @@
 import { InteractionHandler, InteractionHandlerTypes, Piece } from '@sapphire/framework';
-import { type ButtonInteraction, TextInputStyle } from 'discord.js';
-import { ActionRowBuilder, ModalBuilder, TextInputBuilder } from 'discord.js';
+import { ActionRowBuilder, type ButtonInteraction, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 
 export class VerifyButtonHandler extends InteractionHandler {
   constructor(context: Piece.Context, options: InteractionHandler.Options) {
