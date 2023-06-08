@@ -17,6 +17,7 @@
     "@sapphire/framework": "^4.4.4",
     "discord.js": "14.x",
     "dotenv": "^16.1.3",
+    "node-cache": "^5.1.2",
     "prisma": "^4.15.0",
     "winston": "^3.9.0"
   },
