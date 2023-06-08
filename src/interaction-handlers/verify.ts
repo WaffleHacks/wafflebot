@@ -2,6 +2,7 @@ import { InteractionHandler, InteractionHandlerTypes, Piece } from '@sapphire/fr
 import { ActionRowBuilder, type ButtonInteraction, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 
 import { Settings } from '@lib/database';
+import embeds from '@lib/embeds';
 
 export class VerifyButtonHandler extends InteractionHandler {
   constructor(context: Piece.Context, options: InteractionHandler.Options) {
@@ -12,7 +13,7 @@ export class VerifyButtonHandler extends InteractionHandler {
     if (await this.verificationNotSetup(interaction)) {
       await interaction.reply({
         ephemeral: true,
-        content: ':x: Verification is not setup properly, please contact an organizer.',
+        embeds: [embeds.card(':x: Verification is not setup properly', 'Please contact an organizer')],
       });
       return;
     }

@@ -3,6 +3,7 @@ import { ButtonStyle, ChannelType } from 'discord-api-types/v10';
 import { ActionRowBuilder, ButtonBuilder, Client, TextChannel, channelMention } from 'discord.js';
 
 import { Settings } from '@lib/database';
+import embeds from '@lib/embeds';
 
 const HEADER_MESSAGE = `
 **Welcome to \u200b :waffle: \u200b WaffleHacks 2023!**
@@ -83,7 +84,7 @@ export class SetupVerificationCommand extends Command {
     });
 
     return interaction.reply({
-      content: `Successfully setup the verification channel in ${channelMention(channel.id)}`,
+      embeds: [embeds.message(`Successfully setup the verification channel in ${channelMention(channel.id)}`)],
       ephemeral: true,
     });
   }

@@ -2,6 +2,7 @@ import { Command, CommandOptionsRunTypeEnum } from '@sapphire/framework';
 import { roleMention } from 'discord.js';
 
 import { Settings } from '@lib/database';
+import embeds from '@lib/embeds';
 
 export class ParticipantRoleCommand extends Command {
   public constructor(context: Command.Context, options: Command.Options) {
@@ -32,7 +33,9 @@ export class ParticipantRoleCommand extends Command {
 
       const mention = roleMention(role.id);
       return interaction.reply({
-        content: `Successfully set participant role to ${mention}. You can now run \`/setup-verification\`.`,
+        embeds: [
+          embeds.message(`Successfully set participant role to ${mention}. You can now run \`/setup-verification\`.`),
+        ],
         ephemeral: true,
       });
     } else {
@@ -40,11 +43,18 @@ export class ParticipantRoleCommand extends Command {
 
       if (id !== null) {
         const mention = roleMention(id);
-        return interaction.reply({ content: `The participant role is currently set to ${mention}.`, ephemeral: true });
+        return interaction.reply({
+          embeds: [embeds.message(`The participant role is currently set to ${mention}.`)],
+          ephemeral: true,
+        });
       } else {
         return interaction.reply({
-          content:
-            'The participant role is not set. You must set the role before setting up verification with `/setup-verification`.',
+          embeds: [
+            embeds.card(
+              'The participant role is not set',
+              'You must set the role before setting up verification with `/setup-verification`.',
+            ),
+          ],
           ephemeral: true,
         });
       }

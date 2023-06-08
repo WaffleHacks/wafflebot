@@ -1,7 +1,8 @@
 import { InteractionHandler, InteractionHandlerTypes, Piece } from '@sapphire/framework';
-import { GuildMemberRoleManager, type ModalSubmitInteraction } from 'discord.js';
+import { EmbedBuilder, GuildMemberRoleManager, type ModalSubmitInteraction } from 'discord.js';
 
 import { Settings } from '@lib/database';
+import embeds from '@lib/embeds';
 import { Status, lookupApplicationStatusByEmail } from '@lib/portal';
 
 export class ModalHandler extends InteractionHandler {
@@ -18,7 +19,7 @@ export class ModalHandler extends InteractionHandler {
     if (roleId === null) {
       await interaction.reply({
         ephemeral: true,
-        content: ':x: Verification is not setup properly, please contact an organizer.',
+        embeds: [embeds.card(':x: Verification is not setup properly', 'Please contact an organizer')],
       });
       return;
     }
@@ -31,7 +32,7 @@ export class ModalHandler extends InteractionHandler {
     if (status === Status.ACCEPTED) await interaction.member.roles.add(roleId);
     else await interaction.member.roles.remove(roleId);
 
-    await interaction.editReply({ content: this.messageForStatus(status) });
+    await interaction.editReply({ embeds: [this.messageForStatus(status)] });
   }
 
   public override parse(interaction: ModalSubmitInteraction) {
@@ -39,16 +40,28 @@ export class ModalHandler extends InteractionHandler {
     else return this.some();
   }
 
-  private messageForStatus(status: Status | null): string {
+  private messageForStatus(status: Status | null): EmbedBuilder {
     switch (status) {
       case null:
-        return "It looks like you haven't submitted an application yet.\n\nGo to https://apply.wafflehacks.org to submit one now! It will only take a couple minutes!";
+        return embeds.card(
+          ":grey_question: It looks like you haven't submitted an application yet",
+          'Go to https://apply.wafflehacks.org to submit one now! It will only take a couple minutes!',
+        );
       case Status.PENDING:
-        return 'We found your application, but it is still being reviewed. Please wait until you get your application decision and then try again.';
+        return embeds.card(
+          ':grey_question: Your application is still being reviewed',
+          'Please wait until you receive your application decision via email and then try again.',
+        );
       case Status.REJECTED:
-        return 'Unfortunately, it looks like your application was rejected. We are unable to admit you into the event server.';
+        return embeds.card(
+          ':x: Unfortunately it looks like your application was rejected',
+          'We are unable to admit you into the event server. Please apply again next year!',
+        );
       case Status.ACCEPTED:
-        return "You've now been given access to the rest of the server! Have fun and good luck!";
+        return embeds.card(
+          ":white_check_mark: You've been verified!",
+          "You've now been given access to the rest of the server! Have fun and good luck!",
+        );
     }
   }
 }
