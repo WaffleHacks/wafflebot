@@ -10,6 +10,7 @@ primary_region = "yyz"
   image = "us-central1-docker.pkg.dev/wafflehacks-production/internal/wafflebot:sha-SHORT_SHA"
 
 [deploy]
+  release_command = "yarn prisma migrate deploy"
   strategy = "rolling"
 
 [checks]
