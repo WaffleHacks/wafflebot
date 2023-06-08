@@ -4,7 +4,7 @@ import { ActionRowBuilder, ButtonBuilder, Client, TextChannel, channelMention } 
 
 import { Settings } from '@lib/database';
 
-const UPPER_MESSAGE = `
+const HEADER_MESSAGE = `
 **Welcome to \u200b :waffle: \u200b WaffleHacks 2023!**
 ═══════════════════════
 
@@ -19,7 +19,7 @@ You don't yet have full access to all our channels. Just follow these short step
 \u200b
 `;
 
-const LOWER_MESSAGE = `\u200b
+const FOOTER_MESSAGE = `\u200b
 \u200b
 :asterisk: - If you're here as a sponsor, judge, or mentor, you'll need to DM one of our directors.
 
@@ -60,8 +60,8 @@ export class SetupVerificationCommand extends Command {
 
     await this.purgeOldChannel(interaction.client);
 
-    await channel.send({
-      content: UPPER_MESSAGE.replace('{RULES_CHANNEL}', channelMention(rulesChannel.id)),
+    const headerMessage = await channel.send({
+      content: HEADER_MESSAGE.replace('{RULES_CHANNEL}', channelMention(rulesChannel.id)),
       flags: 'SuppressEmbeds',
     });
 
@@ -71,11 +71,16 @@ export class SetupVerificationCommand extends Command {
       .setLabel('Get verified!')
       .setStyle(ButtonStyle.Success);
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
-    await channel.send({ components: [row] });
+    const buttonMessage = await channel.send({ components: [row] });
 
-    await channel.send({ content: LOWER_MESSAGE });
+    const footerMessage = await channel.send({ content: FOOTER_MESSAGE });
 
-    await Settings.setVerificationChannel(channel.id);
+    await Settings.setVerificationMessage({
+      channelId: channel.id,
+      headerId: headerMessage.id,
+      buttonId: buttonMessage.id,
+      footerId: footerMessage.id,
+    });
 
     return interaction.reply({
       content: `Successfully setup the verification channel in ${channelMention(channel.id)}`,
@@ -84,14 +89,14 @@ export class SetupVerificationCommand extends Command {
   }
 
   private async purgeOldChannel(client: Client): Promise<void> {
-    const id = await Settings.getVerificationChannel();
-    if (id === null) return;
+    const message = await Settings.getVerificationMessage();
+    if (message === null) return;
 
-    const channel = await client.channels.fetch(id);
+    const { channelId, headerId, buttonId, footerId } = message;
+
+    const channel = await client.channels.fetch(channelId);
     if (channel === null || !(channel instanceof TextChannel)) return;
 
-    // We only send 3 messages, so we only need to delete 3
-    const last = await channel.messages.fetch({ limit: 3 });
-    await channel.bulkDelete(last);
+    await channel.bulkDelete([headerId, buttonId, footerId]);
   }
 }

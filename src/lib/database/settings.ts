@@ -1,25 +1,33 @@
 import { prisma } from './client';
 
+interface VerificationMessage {
+  channelId: string;
+  headerId: string;
+  buttonId: string;
+  footerId: string;
+}
+
 export class Settings {
   /**
-   * Get the verification channel ID
+   * Get the verification message information
    */
-  public static async getVerificationChannel(): Promise<string | null> {
-    const setting = await prisma.setting.findFirst({ where: { key: 'VERIFICATION_CHANNEL' } });
+  public static async getVerificationMessage(): Promise<VerificationMessage | null> {
+    const setting = await prisma.setting.findFirst({ where: { key: 'VERIFICATION_MESSAGE' } });
     if (setting === null) return null;
 
-    return setting.value;
+    return JSON.parse(setting.value);
   }
 
   /**
-   * Store the verification channel ID
-   * @param id the channel's ID
+   * Set the verification message information
+   * @param message the message and channel IDs
    */
-  public static async setVerificationChannel(id: string): Promise<void> {
+  public static async setVerificationMessage(message: VerificationMessage): Promise<void> {
+    const serialized = JSON.stringify(message);
     await prisma.setting.upsert({
-      create: { key: 'VERIFICATION_CHANNEL', value: id },
-      update: { value: id },
-      where: { key: 'VERIFICATION_CHANNEL' },
+      create: { key: 'VERIFICATION_MESSAGE', value: serialized },
+      update: { value: serialized },
+      where: { key: 'VERIFICATION_MESSAGE' },
     });
   }
 

@@ -14,8 +14,8 @@ datasource db {
 enum SettingKey {
   @@map("setting_key")
 
-  // The ID of the verification channel
-  VERIFICATION_CHANNEL
+  // Information about the verification message(s) and channel stored as JSON
+  VERIFICATION_MESSAGE
   // The ID of the participant role
   PARTICIPANT_ROLE
 }
