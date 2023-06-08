@@ -17,6 +17,10 @@ COPY --chown=app prisma prisma
 COPY --chown=app src src
 COPY --chown=app tsup.config.ts ./
 
+# Add commit info
+ARG COMMIT_SHA=dev
+RUN echo "export const VERSION = '$COMMIT_SHA';" > src/lib/version.ts
+
 RUN yarn prisma generate
 RUN yarn build
 
