@@ -20,9 +20,18 @@ enum SettingKey {
   PARTICIPANT_ROLE
 }
 
+// Key-value store of Bot settings
 model Setting {
   @@map("settings")
 
   key SettingKey @id
   value String
+}
+
+// Mapping from Discord ID to application portal ID
+model Link {
+  @@map("links")
+
+  discord_id String @id
+  participant_id Int @unique
 }
