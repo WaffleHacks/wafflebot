@@ -9,7 +9,7 @@ export default defineConfig({
   clean: true,
   bundle: true,
   dts: false,
-  entry: ['src/index.ts', ...sapphireFolders],
+  entry: ['src/index.ts', 'src/instrumentation.ts', ...sapphireFolders],
   format: ['cjs'],
   minify: false,
   tsconfig: 'tsconfig.json',

@@ -1,13 +1,11 @@
 import 'dotenv/config';
 
-import logger from '@lib/logger';
-
 function load(name: string, defaultValue?: string): string {
   const value = process.env[name];
   if (value !== undefined) return value;
 
   if (defaultValue === undefined) {
-    logger.error(`missing environment variable ${name}`);
+    console.log(`ERROR: missing environment variable ${name}`);
     process.exit(1);
   } else return defaultValue;
 }
@@ -19,3 +17,7 @@ export const APPLICATION_PORTAL_TOKEN = load('APPLICATION_PORTAL_TOKEN');
 
 export const HEALTHCHECK_ADDRESS = load('HEALTHCHECK_ADDRESS', '0.0.0.0');
 export const HEALTHCHECK_PORT = parseInt(load('HEALTHCHECK_PORT', '8888'));
+
+export const OTEL_ENABLE = ['yes', 'y', 'true', 't', '1'].includes(load('OTEL_ENABLE', 'yes').toLowerCase());
+export const OTEL_SERVICE_NAME = load('OTEL_SERVICE_NAME', 'wafflebot');
+export const OTEL_EXPORTER_OTLP_ENDPOINT = load('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://127.0.0.1:9217');
