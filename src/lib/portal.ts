@@ -1,7 +1,7 @@
 import { context, propagation } from '@opentelemetry/api';
 
 import { APPLICATION_PORTAL_TOKEN, APPLICATION_PORTAL_URL } from '@lib/config';
-import { inSpan } from '@lib/tracing';
+import { withSpan } from '@lib/tracing';
 
 export enum Status {
   ACCEPTED = 'accepted',
@@ -42,9 +42,9 @@ export interface UserInfo {
  * @param email
  */
 export const lookupParticipantByEmail = async (email: string): Promise<UserInfo | null> =>
-  inSpan('lookup', (span) => {
+  await withSpan('lookup', async (span): Promise<UserInfo | null> => {
     span.setAttributes({ 'lookup.by': 'email', 'lookup.email': email });
-    return request(`lookup?email=${encodeURIComponent(email)}`);
+    return await request(`lookup?email=${encodeURIComponent(email)}`);
   });
 
 /**
@@ -52,13 +52,13 @@ export const lookupParticipantByEmail = async (email: string): Promise<UserInfo 
  * @param id
  */
 export const lookupParticipantByID = async (id: number): Promise<UserInfo | null> =>
-  inSpan('lookup', (span) => {
+  await withSpan('lookup', async (span): Promise<UserInfo | null> => {
     span.setAttributes({ 'lookup.by': 'id', 'lookup.id': id });
-    return request(`lookup?id=${id}`);
+    return await request(`lookup?id=${id}`);
   });
 
-const request = <T>(pathAndQuery: string): Promise<T> =>
-  inSpan('request', async (span) => {
+const request = async <T>(pathAndQuery: string): Promise<T> =>
+  await withSpan('request', async (span) => {
     const url = `${APPLICATION_PORTAL_URL}/integrations/wafflebot/${pathAndQuery}`;
 
     span.setAttributes({ 'http.request.method': 'GET', 'http.request.url': url });
@@ -67,6 +67,7 @@ const request = <T>(pathAndQuery: string): Promise<T> =>
     propagation.inject(context.active(), headers);
 
     const response = await fetch(url, { headers });
+    span.setAttribute('http.response.status', response.status);
 
     if (response.status !== 200) throw new Error(`unexpected response: ${await response.text()} (${response.status})`);
     else return await response.json();

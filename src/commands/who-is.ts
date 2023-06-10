@@ -7,6 +7,7 @@ import { Link } from '@lib/database';
 import embeds from '@lib/embeds';
 import { UserInfo, lookupParticipantByEmail, lookupParticipantByID } from '@lib/portal';
 import { Command } from '@lib/sapphire';
+import { withSpan } from '@lib/tracing';
 
 export class WhoIsCommand extends Command {
   public constructor(context: Command.Context, options: Command.Options) {
@@ -40,7 +41,7 @@ export class WhoIsCommand extends Command {
       'query.user.name': this.formatUsername(user ?? undefined),
     });
 
-    await interaction.deferReply({ ephemeral: true });
+    await withSpan('reply.defer', () => interaction.deferReply({ ephemeral: true }));
 
     let embed: EmbedBuilder;
     const info = await this.lookup(email, user);
@@ -65,7 +66,7 @@ export class WhoIsCommand extends Command {
         );
     }
 
-    await interaction.editReply({ embeds: [embed] });
+    await withSpan('reply.edit', () => interaction.editReply({ embeds: [embed] }));
   }
 
   private async lookup(email: string | null, user: User | null): Promise<UserInfo | null> {

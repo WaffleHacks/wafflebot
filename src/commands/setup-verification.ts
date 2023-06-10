@@ -6,7 +6,7 @@ import { ActionRowBuilder, ButtonBuilder, Client, TextChannel, channelMention } 
 import { Settings } from '@lib/database';
 import embeds from '@lib/embeds';
 import { Command } from '@lib/sapphire';
-import { inSpan } from '@lib/tracing';
+import { withSpan } from '@lib/tracing';
 
 const HEADER_MESSAGE = `
 **Welcome to \u200b :waffle: \u200b WaffleHacks 2023!**
@@ -72,10 +72,12 @@ export class SetupVerificationCommand extends Command {
 
     await this.purgeOldChannel(interaction.client);
 
-    const headerMessage = await channel.send({
-      content: HEADER_MESSAGE.replace('{RULES_CHANNEL}', channelMention(rulesChannel.id)),
-      flags: 'SuppressEmbeds',
-    });
+    const headerMessage = await withSpan('send.header', () =>
+      channel.send({
+        content: HEADER_MESSAGE.replace('{RULES_CHANNEL}', channelMention(rulesChannel.id)),
+        flags: 'SuppressEmbeds',
+      }),
+    );
 
     const button = new ButtonBuilder()
       .setCustomId('verify')
@@ -83,9 +85,9 @@ export class SetupVerificationCommand extends Command {
       .setLabel('Get verified!')
       .setStyle(ButtonStyle.Success);
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
-    const buttonMessage = await channel.send({ components: [row] });
+    const buttonMessage = await withSpan('send.button', () => channel.send({ components: [row] }));
 
-    const footerMessage = await channel.send({ content: FOOTER_MESSAGE });
+    const footerMessage = await withSpan('send.footer', () => channel.send({ content: FOOTER_MESSAGE }));
 
     await Settings.setVerificationMessage({
       channelId: channel.id,
@@ -94,23 +96,25 @@ export class SetupVerificationCommand extends Command {
       footerId: footerMessage.id,
     });
 
-    return interaction.reply({
-      embeds: [embeds.message(`Successfully setup the verification channel in ${channelMention(channel.id)}`)],
-      ephemeral: true,
-    });
+    return withSpan('reply', () =>
+      interaction.reply({
+        embeds: [embeds.message(`Successfully setup the verification channel in ${channelMention(channel.id)}`)],
+        ephemeral: true,
+      }),
+    );
   }
 
   private async purgeOldChannel(client: Client): Promise<void> {
-    inSpan('purge-old-channels', async () => {
+    await withSpan('purge-old-channels', async () => {
       const message = await Settings.getVerificationMessage();
       if (message === null) return;
 
       const { channelId, headerId, buttonId, footerId } = message;
 
-      const channel = await client.channels.fetch(channelId);
+      const channel = await withSpan('channel.fetch', () => client.channels.fetch(channelId));
       if (channel === null || !(channel instanceof TextChannel)) return;
 
-      await channel.bulkDelete([headerId, buttonId, footerId]);
+      await withSpan('channel.bulkDelete', () => channel.bulkDelete([headerId, buttonId, footerId]));
     });
   }
 }

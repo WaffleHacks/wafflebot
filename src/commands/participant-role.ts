@@ -5,6 +5,7 @@ import { roleMention } from 'discord.js';
 import { Settings } from '@lib/database';
 import embeds from '@lib/embeds';
 import { Command } from '@lib/sapphire';
+import { withSpan } from '@lib/tracing';
 
 export class ParticipantRoleCommand extends Command {
   public constructor(context: Command.Context, options: Command.Options) {
@@ -38,12 +39,14 @@ export class ParticipantRoleCommand extends Command {
       await Settings.setParticipantRole(role.id);
 
       const mention = roleMention(role.id);
-      return interaction.reply({
-        embeds: [
-          embeds.message(`Successfully set participant role to ${mention}. You can now run \`/setup-verification\`.`),
-        ],
-        ephemeral: true,
-      });
+      return withSpan('reply', () =>
+        interaction.reply({
+          embeds: [
+            embeds.message(`Successfully set participant role to ${mention}. You can now run \`/setup-verification\`.`),
+          ],
+          ephemeral: true,
+        }),
+      );
     } else {
       span?.setAttribute('action', 'query');
       const id = await Settings.getParticipantRole();
@@ -51,21 +54,25 @@ export class ParticipantRoleCommand extends Command {
       if (id !== null) {
         span?.setAttribute('role.id', id);
         const mention = roleMention(id);
-        return interaction.reply({
-          embeds: [embeds.message(`The participant role is currently set to ${mention}.`)],
-          ephemeral: true,
-        });
+        return withSpan('reply', () =>
+          interaction.reply({
+            embeds: [embeds.message(`The participant role is currently set to ${mention}.`)],
+            ephemeral: true,
+          }),
+        );
       } else {
         span?.setAttribute('role.id', 'unknown');
-        return interaction.reply({
-          embeds: [
-            embeds.card(
-              'The participant role is not set',
-              'You must set the role before setting up verification with `/setup-verification`.',
-            ),
-          ],
-          ephemeral: true,
-        });
+        return withSpan('reply', () =>
+          interaction.reply({
+            embeds: [
+              embeds.card(
+                'The participant role is not set',
+                'You must set the role before setting up verification with `/setup-verification`.',
+              ),
+            ],
+            ephemeral: true,
+          }),
+        );
       }
     }
   }
