@@ -7,11 +7,10 @@ export class Link {
    * @param participantId the participant's ID
    */
   public static async create(discordId: string, participantId: number) {
-    await prisma.link.create({
-      data: {
-        discord_id: discordId,
-        participant_id: participantId,
-      },
+    await prisma.link.upsert({
+      create: { discord_id: discordId, participant_id: participantId },
+      where: { discord_id: discordId },
+      update: { participant_id: participantId },
     });
   }
 
