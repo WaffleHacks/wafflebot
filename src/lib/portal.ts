@@ -1,4 +1,7 @@
+import { context, propagation } from '@opentelemetry/api';
+
 import { APPLICATION_PORTAL_TOKEN, APPLICATION_PORTAL_URL } from '@lib/config';
+import { inSpan } from '@lib/tracing';
 
 export enum Status {
   ACCEPTED = 'accepted',
@@ -39,21 +42,32 @@ export interface UserInfo {
  * @param email
  */
 export const lookupParticipantByEmail = async (email: string): Promise<UserInfo | null> =>
-  request(`lookup?email=${encodeURIComponent(email)}`);
+  inSpan('lookup', (span) => {
+    span.setAttributes({ 'lookup.by': 'email', 'lookup.email': email });
+    return request(`lookup?email=${encodeURIComponent(email)}`);
+  });
 
 /**
  * Lookup a participant's information by their application portal ID
  * @param id
  */
-export const lookupParticipantByID = async (id: number): Promise<UserInfo | null> => request(`lookup?id=${id}`);
-
-async function request<T>(pathAndQuery: string): Promise<T> {
-  const response = await fetch(`${APPLICATION_PORTAL_URL}/integrations/wafflebot/${pathAndQuery}`, {
-    headers: {
-      Authorization: `Bearer ${APPLICATION_PORTAL_TOKEN}`,
-    },
+export const lookupParticipantByID = async (id: number): Promise<UserInfo | null> =>
+  inSpan('lookup', (span) => {
+    span.setAttributes({ 'lookup.by': 'id', 'lookup.id': id });
+    return request(`lookup?id=${id}`);
   });
-  if (response.status !== 200) throw new Error(`unexpected response: ${await response.text()} (${response.status})`);
 
-  return await response.json();
-}
+const request = <T>(pathAndQuery: string): Promise<T> =>
+  inSpan('request', async (span) => {
+    const url = `${APPLICATION_PORTAL_URL}/integrations/wafflebot/${pathAndQuery}`;
+
+    span.setAttributes({ 'http.request.method': 'GET', 'http.request.url': url });
+
+    const headers: HeadersInit = { Authorization: `Bearer ${APPLICATION_PORTAL_TOKEN}` };
+    propagation.inject(context.active(), headers);
+
+    const response = await fetch(url, { headers });
+
+    if (response.status !== 200) throw new Error(`unexpected response: ${await response.text()} (${response.status})`);
+    else return await response.json();
+  });
