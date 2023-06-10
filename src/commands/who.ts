@@ -9,7 +9,7 @@ import { UserInfo, lookupParticipantByEmail, lookupParticipantByID } from '@lib/
 import { Command } from '@lib/sapphire';
 import { withSpan } from '@lib/tracing';
 
-export class WhoIsCommand extends Command {
+export class WhoCommand extends Command {
   public constructor(context: Command.Context, options: Command.Options) {
     super(context, {
       ...options,
