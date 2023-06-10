@@ -46,16 +46,16 @@ export class WhoIsCommand extends Command {
     let embed: EmbedBuilder;
     const info = await this.lookup(email, user);
     if (info === null) {
-      span?.setAttribute('user.id', 'unknown');
+      span?.setAttributes({ 'participant.id': 'unknown', 'participant.discord': 'unknown' });
       embed = embeds.card(
         ':grey_question: Participant not found',
         "We looked everywhere, but couldn't find any participants matching your query. Please check it is correct and try again.",
       );
     } else {
-      span?.setAttribute('user.id', info.id);
+      span?.setAttribute('participant.id', info.id);
 
       const userId = await Link.findDiscordId(info.id);
-      span?.setAttribute('user.discord', userId === null ? 'unknown' : userId);
+      span?.setAttribute('participant.discord', userId === null ? 'unknown' : userId);
 
       embed = embeds
         .card(`${info.first_name} ${info.last_name}`)
