@@ -1,9 +1,12 @@
-import { InteractionHandler, InteractionHandlerTypes, Piece } from '@sapphire/framework';
+import { trace } from '@opentelemetry/api';
+import { InteractionHandlerTypes, Piece } from '@sapphire/framework';
 import { EmbedBuilder, GuildMemberRoleManager, type ModalSubmitInteraction } from 'discord.js';
 
 import { Link, Settings } from '@lib/database';
 import embeds from '@lib/embeds';
 import { Status, lookupApplicationStatusByEmail } from '@lib/portal';
+import { InteractionHandler } from '@lib/sapphire';
+import { withSpan } from '@lib/tracing';
 
 export class ModalHandler extends InteractionHandler {
   constructor(context: Piece.Context, options: InteractionHandler.Options) {
@@ -17,24 +20,39 @@ export class ModalHandler extends InteractionHandler {
 
     const roleId = await Settings.getParticipantRole();
     if (roleId === null) {
-      await interaction.reply({
-        ephemeral: true,
-        embeds: [embeds.card(':x: Verification is not setup properly', 'Please contact an organizer')],
-      });
-      return;
+      return await withSpan(
+        'reply.failure',
+        async () =>
+          await interaction.reply({
+            ephemeral: true,
+            embeds: [embeds.card(':x: Verification is not setup properly', 'Please contact an organizer')],
+          }),
+      );
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await withSpan('reply.defer', async () => await interaction.deferReply({ ephemeral: true }));
 
     const email = interaction.fields.getTextInputValue('email');
     const application = await lookupApplicationStatusByEmail(email);
 
-    if (application.status === Status.ACCEPTED) {
-      await interaction.member.roles.add(roleId);
-      await Link.create(interaction.member.user.id, application.id as number);
-    } else await interaction.member.roles.remove(roleId);
+    trace.getActiveSpan()?.setAttribute('application.status', (application.status as string) ?? undefined);
 
-    await interaction.editReply({ embeds: [this.messageForStatus(application.status)] });
+    if (application.status === Status.ACCEPTED) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      await withSpan('role.add', async () => await (interaction.member!.roles as GuildMemberRoleManager).add(roleId));
+      await Link.create(interaction.member.user.id, application.id as number);
+    } else {
+      await withSpan(
+        'role.remove',
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        async () => await (interaction.member!.roles as GuildMemberRoleManager).remove(roleId),
+      );
+    }
+
+    await withSpan(
+      'reply.edit',
+      async () => await interaction.editReply({ embeds: [this.messageForStatus(application.status)] }),
+    );
   }
 
   public override parse(interaction: ModalSubmitInteraction) {

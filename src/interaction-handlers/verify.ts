@@ -1,8 +1,10 @@
-import { InteractionHandler, InteractionHandlerTypes, Piece } from '@sapphire/framework';
+import { InteractionHandlerTypes, Piece } from '@sapphire/framework';
 import { ActionRowBuilder, type ButtonInteraction, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 
 import { Settings } from '@lib/database';
 import embeds from '@lib/embeds';
+import { InteractionHandler } from '@lib/sapphire';
+import { withSpan } from '@lib/tracing';
 
 export class VerifyButtonHandler extends InteractionHandler {
   constructor(context: Piece.Context, options: InteractionHandler.Options) {
@@ -11,11 +13,14 @@ export class VerifyButtonHandler extends InteractionHandler {
 
   public async run(interaction: ButtonInteraction) {
     if (await this.verificationNotSetup(interaction)) {
-      await interaction.reply({
-        ephemeral: true,
-        embeds: [embeds.card(':x: Verification is not setup properly', 'Please contact an organizer')],
-      });
-      return;
+      return withSpan(
+        'reply.failure',
+        async () =>
+          await interaction.reply({
+            ephemeral: true,
+            embeds: [embeds.card(':x: Verification is not setup properly', 'Please contact an organizer')],
+          }),
+      );
     }
 
     const modal = new ModalBuilder()
@@ -30,7 +35,7 @@ export class VerifyButtonHandler extends InteractionHandler {
             .setStyle(TextInputStyle.Short),
         ),
       );
-    await interaction.showModal(modal);
+    await withSpan('modal', async () => await interaction.showModal(modal));
   }
 
   public override parse(interaction: ButtonInteraction) {
@@ -39,13 +44,18 @@ export class VerifyButtonHandler extends InteractionHandler {
   }
 
   private async verificationNotSetup(interaction: ButtonInteraction): Promise<boolean> {
-    const participantRoleId = await Settings.getParticipantRole();
-    if (participantRoleId === null) return true;
+    return withSpan('check.verification-not-setup', async () => {
+      const participantRoleId = await Settings.getParticipantRole();
+      if (participantRoleId === null) return true;
 
-    const participantRole = await interaction.guild?.roles.fetch(participantRoleId);
-    if (participantRole === null || participantRole == undefined) return true;
+      const participantRole = await withSpan('role.fetch', async (span) => {
+        span.setAttribute('role.id', participantRoleId);
+        return interaction.guild?.roles.fetch(participantRoleId);
+      });
+      if (participantRole === null || participantRole == undefined) return true;
 
-    const verification = await Settings.getVerificationMessage();
-    return verification === null;
+      const verification = await Settings.getVerificationMessage();
+      return verification === null;
+    });
   }
 }

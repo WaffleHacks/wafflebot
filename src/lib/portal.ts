@@ -23,11 +23,13 @@ export interface ApplicationStatus {
  * Lookup the status of an application by the participant's email
  * @param email
  */
-export async function lookupApplicationStatusByEmail(email: string): Promise<ApplicationStatus> {
-  const data: StatusResponse | null = await request(`status?email=${encodeURIComponent(email)}`);
-  if (data === null) return { status: null };
-  else return data;
-}
+export const lookupApplicationStatusByEmail = async (email: string): Promise<ApplicationStatus> =>
+  withSpan('lookup.application', async (span) => {
+    span.setAttribute('lookup.email', email);
+    const data: StatusResponse | null = await request(`status?email=${encodeURIComponent(email)}`);
+    if (data === null) return { status: null };
+    else return data;
+  });
 
 export interface UserInfo {
   id: number;
@@ -42,7 +44,7 @@ export interface UserInfo {
  * @param email
  */
 export const lookupParticipantByEmail = async (email: string): Promise<UserInfo | null> =>
-  await withSpan('lookup', async (span): Promise<UserInfo | null> => {
+  await withSpan('lookup.participant', async (span): Promise<UserInfo | null> => {
     span.setAttributes({ 'lookup.by': 'email', 'lookup.email': email });
     return await request(`lookup?email=${encodeURIComponent(email)}`);
   });
@@ -52,7 +54,7 @@ export const lookupParticipantByEmail = async (email: string): Promise<UserInfo 
  * @param id
  */
 export const lookupParticipantByID = async (id: number): Promise<UserInfo | null> =>
-  await withSpan('lookup', async (span): Promise<UserInfo | null> => {
+  await withSpan('lookup.participant', async (span): Promise<UserInfo | null> => {
     span.setAttributes({ 'lookup.by': 'id', 'lookup.id': id });
     return await request(`lookup?id=${id}`);
   });
