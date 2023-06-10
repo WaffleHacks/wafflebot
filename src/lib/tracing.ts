@@ -1,6 +1,6 @@
 import { Span, SpanStatusCode, trace } from '@opentelemetry/api';
 
-const tracer = trace.getTracer('wafflebot');
+export const tracer = trace.getTracer('wafflebot');
 
 export const inSpan = <F extends (span: Span) => T, T>(name: string, fn: F): T =>
   tracer.startActiveSpan(name, (span) => {

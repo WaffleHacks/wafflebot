@@ -1,9 +1,12 @@
-import { Command, CommandOptionsRunTypeEnum } from '@sapphire/framework';
+import { trace } from '@opentelemetry/api';
+import { CommandOptionsRunTypeEnum } from '@sapphire/framework';
 import { ButtonStyle, ChannelType } from 'discord-api-types/v10';
 import { ActionRowBuilder, ButtonBuilder, Client, TextChannel, channelMention } from 'discord.js';
 
 import { Settings } from '@lib/database';
 import embeds from '@lib/embeds';
+import { Command } from '@lib/sapphire';
+import { inSpan } from '@lib/tracing';
 
 const HEADER_MESSAGE = `
 **Welcome to \u200b :waffle: \u200b WaffleHacks 2023!**
@@ -59,6 +62,14 @@ export class SetupVerificationCommand extends Command {
     const channel = interaction.options.getChannel('channel', true, [ChannelType.GuildText]);
     const rulesChannel = interaction.options.getChannel('rules', true, [ChannelType.GuildText]);
 
+    const span = trace.getActiveSpan();
+    span?.setAttributes({
+      'channel.id': channel.id,
+      'channel.name': channel.name,
+      'rules.id': rulesChannel.id,
+      'rules.name': rulesChannel.name,
+    });
+
     await this.purgeOldChannel(interaction.client);
 
     const headerMessage = await channel.send({
@@ -90,14 +101,16 @@ export class SetupVerificationCommand extends Command {
   }
 
   private async purgeOldChannel(client: Client): Promise<void> {
-    const message = await Settings.getVerificationMessage();
-    if (message === null) return;
+    inSpan('purge-old-channels', async () => {
+      const message = await Settings.getVerificationMessage();
+      if (message === null) return;
 
-    const { channelId, headerId, buttonId, footerId } = message;
+      const { channelId, headerId, buttonId, footerId } = message;
 
-    const channel = await client.channels.fetch(channelId);
-    if (channel === null || !(channel instanceof TextChannel)) return;
+      const channel = await client.channels.fetch(channelId);
+      if (channel === null || !(channel instanceof TextChannel)) return;
 
-    await channel.bulkDelete([headerId, buttonId, footerId]);
+      await channel.bulkDelete([headerId, buttonId, footerId]);
+    });
   }
 }

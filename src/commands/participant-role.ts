@@ -1,8 +1,10 @@
-import { Command, CommandOptionsRunTypeEnum } from '@sapphire/framework';
+import { trace } from '@opentelemetry/api';
+import { CommandOptionsRunTypeEnum } from '@sapphire/framework';
 import { roleMention } from 'discord.js';
 
 import { Settings } from '@lib/database';
 import embeds from '@lib/embeds';
+import { Command } from '@lib/sapphire';
 
 export class ParticipantRoleCommand extends Command {
   public constructor(context: Command.Context, options: Command.Options) {
@@ -28,7 +30,11 @@ export class ParticipantRoleCommand extends Command {
   public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     const role = interaction.options.getRole('to', false);
 
+    const span = trace.getActiveSpan();
+
     if (role) {
+      span?.setAttributes({ action: 'update', 'role.id': role.id, 'role.name': role.name });
+
       await Settings.setParticipantRole(role.id);
 
       const mention = roleMention(role.id);
@@ -39,15 +45,18 @@ export class ParticipantRoleCommand extends Command {
         ephemeral: true,
       });
     } else {
+      span?.setAttribute('action', 'query');
       const id = await Settings.getParticipantRole();
 
       if (id !== null) {
+        span?.setAttribute('role.id', id);
         const mention = roleMention(id);
         return interaction.reply({
           embeds: [embeds.message(`The participant role is currently set to ${mention}.`)],
           ephemeral: true,
         });
       } else {
+        span?.setAttribute('role.id', 'unknown');
         return interaction.reply({
           embeds: [
             embeds.card(

@@ -1,9 +1,12 @@
-import { Command, CommandOptionsRunTypeEnum } from '@sapphire/framework';
+import { trace } from '@opentelemetry/api';
+import { CommandOptionsRunTypeEnum } from '@sapphire/framework';
+import { APIUser } from 'discord-api-types/v10';
 import { EmbedBuilder, User, userMention } from 'discord.js';
 
 import { Link } from '@lib/database';
 import embeds from '@lib/embeds';
 import { UserInfo, lookupParticipantByEmail, lookupParticipantByID } from '@lib/portal';
+import { Command } from '@lib/sapphire';
 
 export class WhoIsCommand extends Command {
   public constructor(context: Command.Context, options: Command.Options) {
@@ -30,17 +33,28 @@ export class WhoIsCommand extends Command {
     const email = interaction.options.getString('email', false);
     const user = interaction.options.getUser('user', false);
 
+    const span = trace.getActiveSpan();
+    span?.setAttributes({
+      'query.email': email ?? undefined,
+      'query.user.id': user?.id ?? undefined,
+      'query.user.name': this.formatUsername(user ?? undefined),
+    });
+
     await interaction.deferReply({ ephemeral: true });
 
     let embed: EmbedBuilder;
     const info = await this.lookup(email, user);
     if (info === null) {
+      span?.setAttribute('user.id', 'unknown');
       embed = embeds.card(
         ':grey_question: Participant not found',
         "We looked everywhere, but couldn't find any participants matching your query. Please check it is correct and try again.",
       );
     } else {
+      span?.setAttribute('user.id', info.id);
+
       const userId = await Link.findDiscordId(info.id);
+      span?.setAttribute('user.discord', userId === null ? 'unknown' : userId);
 
       embed = embeds
         .card(`${info.first_name} ${info.last_name}`)
@@ -51,7 +65,7 @@ export class WhoIsCommand extends Command {
         );
     }
 
-    return interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
   }
 
   private async lookup(email: string | null, user: User | null): Promise<UserInfo | null> {
@@ -65,5 +79,11 @@ export class WhoIsCommand extends Command {
     }
 
     return null;
+  }
+
+  private formatUsername(user?: User | APIUser): string | undefined {
+    if (user === undefined) return undefined;
+    else if (user.discriminator === '0') return user.username;
+    else return `${user.username}#${user.discriminator}`;
   }
 }
