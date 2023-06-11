@@ -15,7 +15,7 @@ export const TOKEN = load('DISCORD_TOKEN');
 export const APPLICATION_PORTAL_URL = load('APPLICATION_PORTAL_BASE_URL');
 export const APPLICATION_PORTAL_TOKEN = load('APPLICATION_PORTAL_TOKEN');
 
-export const HEALTHCHECK_ADDRESS = load('HEALTHCHECK_ADDRESS', '0.0.0.0');
+export const HEALTHCHECK_ADDRESS = process.env.HEALTHCHECK_ADDRESS;
 export const HEALTHCHECK_PORT = parseInt(load('HEALTHCHECK_PORT', '8888'));
 
 export const OTEL_ENABLE = ['yes', 'y', 'true', 't', '1'].includes(load('OTEL_ENABLE', 'yes').toLowerCase());

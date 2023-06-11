@@ -25,10 +25,13 @@ const server = createServer(handler);
 /**
  * Start the healthcheck server
  */
-export const startHealthcheckServer = () =>
+export const startHealthcheckServer = () => {
+  if (HEALTHCHECK_ADDRESS === undefined) return;
+
   server.listen(HEALTHCHECK_PORT, HEALTHCHECK_ADDRESS, () =>
     logger.child('http').info('healthcheck server up and ready to handle requests', {
       host: HEALTHCHECK_ADDRESS,
       port: HEALTHCHECK_PORT,
     }),
   );
+};
