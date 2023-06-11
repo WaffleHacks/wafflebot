@@ -1,7 +1,14 @@
 import { trace } from '@opentelemetry/api';
 import { CommandOptionsRunTypeEnum } from '@sapphire/framework';
 import { APIUser } from 'discord-api-types/v10';
-import { EmbedBuilder, User, userMention } from 'discord.js';
+import {
+  ApplicationCommandType,
+  CommandInteraction,
+  ContextMenuCommandInteraction,
+  EmbedBuilder,
+  User,
+  userMention,
+} from 'discord.js';
 
 import { Link } from '@lib/database';
 import embeds from '@lib/embeds';
@@ -28,17 +35,36 @@ export class WhoCommand extends Command {
         .addStringOption((option) => option.setName('email').setDescription('The email to lookup').setRequired(false))
         .addUserOption((option) => option.setName('user').setDescription('The user to lookup').setRequired(false)),
     );
+    registry.registerContextMenuCommand((builder) =>
+      builder.setName('Lookup application').setType(ApplicationCommandType.User).setDMPermission(false),
+    );
+    registry.registerContextMenuCommand((builder) =>
+      builder.setName('Lookup author application').setType(ApplicationCommandType.Message).setDMPermission(false),
+    );
   }
 
   public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     const email = interaction.options.getString('email', false);
     const user = interaction.options.getUser('user', false);
 
+    await this.findAndResponse(interaction, email, user);
+  }
+
+  public override async contextMenuRun(interaction: ContextMenuCommandInteraction) {
+    let user: User | APIUser;
+    if (interaction.isUserContextMenuCommand()) user = interaction.targetUser;
+    else if (interaction.isMessageContextMenuCommand()) user = interaction.targetMessage.author;
+    else throw new Error('assertion failed: only user and message context menu commands are allowed');
+
+    await this.findAndResponse(interaction, null, user);
+  }
+
+  private async findAndResponse(interaction: CommandInteraction, email: string | null, user: User | APIUser | null) {
     const span = trace.getActiveSpan();
     span?.setAttributes({
       'query.email': email ?? undefined,
       'query.user.id': user?.id ?? undefined,
-      'query.user.name': this.formatUsername(user ?? undefined),
+      'query.user.name': this.formatUsername(user),
     });
 
     await withSpan('reply.defer', () => interaction.deferReply({ ephemeral: true }));
@@ -69,7 +95,7 @@ export class WhoCommand extends Command {
     await withSpan('reply.edit', () => interaction.editReply({ embeds: [embed] }));
   }
 
-  private async lookup(email: string | null, user: User | null): Promise<UserInfo | null> {
+  private async lookup(email: string | null, user: User | APIUser | null): Promise<UserInfo | null> {
     if (email !== null) return lookupParticipantByEmail(email);
 
     if (user !== null) {
@@ -82,8 +108,8 @@ export class WhoCommand extends Command {
     return null;
   }
 
-  private formatUsername(user?: User | APIUser): string | undefined {
-    if (user === undefined) return undefined;
+  private formatUsername(user: User | APIUser | null): string | undefined {
+    if (user === null) return undefined;
     else if (user.discriminator === '0') return user.username;
     else return `${user.username}#${user.discriminator}`;
   }
