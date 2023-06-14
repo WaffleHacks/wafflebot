@@ -1,7 +1,7 @@
 import { trace } from '@opentelemetry/api';
 import { CommandOptionsRunTypeEnum } from '@sapphire/framework';
 import { ButtonStyle, ChannelType } from 'discord-api-types/v10';
-import { ActionRowBuilder, ButtonBuilder, Client, TextChannel, channelMention } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, Client, Message, TextChannel, channelMention } from 'discord.js';
 
 import { Settings } from '@lib/database';
 import embeds from '@lib/embeds';
@@ -54,6 +54,12 @@ export class SetupVerificationCommand extends Command {
         )
         .addChannelOption((option) =>
           option.setName('rules').setDescription('Channel where the rules are displayed').setRequired(true),
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName('ping-everyone')
+            .setDescription('Whether to ping everyone once setup completes')
+            .setRequired(false),
         ),
     );
   }
@@ -61,6 +67,7 @@ export class SetupVerificationCommand extends Command {
   public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     const channel = interaction.options.getChannel('channel', true, [ChannelType.GuildText]);
     const rulesChannel = interaction.options.getChannel('rules', true, [ChannelType.GuildText]);
+    const shouldPing = interaction.options.getBoolean('ping-everyone', false) ?? false;
 
     const span = trace.getActiveSpan();
     span?.setAttributes({
@@ -89,11 +96,15 @@ export class SetupVerificationCommand extends Command {
 
     const footerMessage = await withSpan('send.footer', () => channel.send({ content: FOOTER_MESSAGE }));
 
+    let pingMessage: Message | undefined = undefined;
+    if (shouldPing) pingMessage = await withSpan('send.ping', () => channel.send({ content: '||@everyone||' }));
+
     await Settings.setVerificationMessage({
       channelId: channel.id,
       headerId: headerMessage.id,
       buttonId: buttonMessage.id,
       footerId: footerMessage.id,
+      pingId: pingMessage?.id,
     });
 
     return withSpan('reply', () =>
@@ -109,12 +120,15 @@ export class SetupVerificationCommand extends Command {
       const message = await Settings.getVerificationMessage();
       if (message === null) return;
 
-      const { channelId, headerId, buttonId, footerId } = message;
+      const { channelId, headerId, buttonId, footerId, pingId } = message;
 
       const channel = await withSpan('channel.fetch', () => client.channels.fetch(channelId));
       if (channel === null || !(channel instanceof TextChannel)) return;
 
-      await withSpan('channel.bulkDelete', () => channel.bulkDelete([headerId, buttonId, footerId]));
+      const toDelete = [headerId, buttonId, footerId];
+      if (pingId !== undefined) toDelete.push(pingId);
+
+      await withSpan('channel.bulkDelete', () => channel.bulkDelete(toDelete));
     });
   }
 }

@@ -7,6 +7,7 @@ interface VerificationMessage {
   headerId: string;
   buttonId: string;
   footerId: string;
+  pingId?: string;
 }
 
 // Cache settings for 6 hours by default
