@@ -1,6 +1,18 @@
 import { prisma } from './client';
 
+interface DatabaseEvent {
+  id: number;
+  discord_id: string;
+}
+
 export class Event {
+  /**
+   * Get a list of all the mapped discord events
+   */
+  public static async list(): Promise<DatabaseEvent[]> {
+    return prisma.event.findMany();
+  }
+
   /**
    * Find the Discord scheduled event ID by an event's application portal id
    * @param id the application portal ID
