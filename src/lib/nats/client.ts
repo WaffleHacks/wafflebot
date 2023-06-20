@@ -20,6 +20,7 @@ export default class NATS extends EventEmitter {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public override on(eventName: string | symbol, listener: (...args: any[]) => void): this {
     // intentionally ignoring promise
     this.listen(eventName.toString());
@@ -27,6 +28,7 @@ export default class NATS extends EventEmitter {
     return super.on(eventName, listener);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public override once(eventName: string | symbol, listener: (...args: any[]) => void): this {
     // intentionally ignoring promise
     this.listen(eventName.toString());
