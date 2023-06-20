@@ -45,7 +45,7 @@ export class NextCommand extends Command {
 
     let embed: EmbedBuilder;
     if (next) {
-      embed = embeds.card(next.name);
+      embed = embeds.card(next.name, next.description || undefined);
 
       const discordId = await Event.find(next.id);
       if (discordId) embed.setURL(`https://discord.com/events/${GUILD_ID}/${discordId}`);

@@ -14,6 +14,7 @@ export async function create(client: Client, details: EventDetails) {
   const guild = await client.guilds.fetch(GUILD_ID);
   const created = await guild.scheduledEvents.create({
     name: details.name,
+    description: details.description || undefined,
     scheduledStartTime: details.start,
     scheduledEndTime: details.end,
     privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
@@ -37,6 +38,7 @@ export async function update(client: Client, details: EventDetails, scheduledEve
 
   const eventOptions = {
     name: details.name,
+    description: details.description || undefined,
     scheduledStartTime: details.start,
     scheduledEndTime: details.end,
     privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
