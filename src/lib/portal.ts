@@ -63,6 +63,7 @@ export interface EventDetails {
   id: number;
   name: string;
   url: string;
+  description: string | null;
   start: string;
   end: string;
 }
