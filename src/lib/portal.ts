@@ -59,6 +59,23 @@ export const lookupParticipantByID = async (id: number): Promise<UserInfo | null
     return await request(`lookup?id=${id}`);
   });
 
+export interface EventDetails {
+  id: number;
+  name: string;
+  url: string;
+  start: string;
+  end: string;
+}
+
+export const findEvent = async (id: number): Promise<EventDetails | null> =>
+  await withSpan('events.find', async (span): Promise<EventDetails | null> => {
+    span.setAttribute('event.id', id);
+    return await request(`events/${id}`);
+  });
+
+export const listEvents = async (): Promise<EventDetails[]> =>
+  await withSpan('events.list', async (): Promise<EventDetails[]> => request('events'));
+
 const request = async <T>(pathAndQuery: string): Promise<T> =>
   await withSpan('request', async (span) => {
     const url = `${APPLICATION_PORTAL_URL}/integrations/wafflebot/${pathAndQuery}`;
@@ -73,4 +90,21 @@ const request = async <T>(pathAndQuery: string): Promise<T> =>
 
     if (response.status !== 200) throw new Error(`unexpected response: ${await response.text()} (${response.status})`);
     else return await response.json();
+  });
+
+export const checkInParticipant = async (ids: number[]): Promise<void> =>
+  await withSpan('request', async (span) => {
+    const url = `${APPLICATION_PORTAL_URL}/integrations/wafflebot/check-in`;
+    span.setAttributes({ 'http.request.method': 'PUT', 'http.request.url': url });
+
+    const headers: HeadersInit = {
+      Authorization: `Bearer ${APPLICATION_PORTAL_TOKEN}`,
+      'Content-Type': 'application/json',
+    };
+    propagation.inject(context.active(), headers);
+
+    const response = await fetch(url, { headers, body: JSON.stringify({ participants: ids }) });
+    span.setAttribute('http.response.status', response.status);
+
+    if (response.status !== 200) throw new Error(`unexpected response: ${await response.text()} (${response.status})`);
   });
