@@ -36,3 +36,11 @@ model Link {
   discord_id String @id
   participant_id Int @unique
 }
+
+// Mapping from portal event ID to Discord scheduled event ID
+model Event {
+  @@map("events")
+
+  id Int @id
+  discord_id String @unique
+}
