@@ -11,9 +11,12 @@ function load(name: string, defaultValue?: string): string {
 }
 
 export const TOKEN = load('DISCORD_TOKEN');
+export const GUILD_ID = load('DISCORD_GUILD_ID');
 
 export const APPLICATION_PORTAL_URL = load('APPLICATION_PORTAL_BASE_URL');
 export const APPLICATION_PORTAL_TOKEN = load('APPLICATION_PORTAL_TOKEN');
+
+export const NATS_URL = load('NATS_URL');
 
 export const HEALTHCHECK_ADDRESS = process.env.HEALTHCHECK_ADDRESS;
 export const HEALTHCHECK_PORT = parseInt(load('HEALTHCHECK_PORT', '8888'));

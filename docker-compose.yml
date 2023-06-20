@@ -12,6 +12,15 @@ services:
     networks:
       - default
 
+  nats:
+    image: nats:2.9.18-alpine
+    command:
+      - -a=0.0.0.0
+      - -p=4222
+      - --jetstream
+    ports:
+      - "9243:4222"
+
   jaeger:
     image: jaegertracing/all-in-one:1.45
     ports:
