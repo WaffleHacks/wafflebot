@@ -18,7 +18,11 @@ export class Event {
    * @param discordId the Discord scheduled event ID
    */
   public static async create(id: number, discordId: string) {
-    await prisma.event.create({ data: { id, discord_id: discordId } });
+    await prisma.event.upsert({
+      create: { id, discord_id: discordId },
+      where: { id },
+      update: { discord_id: discordId },
+    });
   }
 
   /**
