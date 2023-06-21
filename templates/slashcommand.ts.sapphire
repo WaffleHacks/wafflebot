@@ -1,0 +1,29 @@
+{
+  "category": "commands"
+}
+---
+import { CommandOptionsRunTypeEnum } from '@sapphire/framework';
+
+import { Command } from '@lib/sapphire';
+
+export class SlashCommand extends Command {
+  public constructor(context: Command.Context, options: Command.Options) {
+    super(context, {
+      ...options,
+      description: 'A basic command',
+      runIn: CommandOptionsRunTypeEnum.GuildText,
+    });
+  }
+
+  public override registerApplicationCommands(registry: Command.Registry) {
+    registry.registerChatInputCommand((builder) =>
+      builder //
+        .setName(this.name)
+        .setDescription(this.description),
+    );
+  }
+
+  public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
+    return interaction.reply({ content: 'Hello world!' });
+  }
+}

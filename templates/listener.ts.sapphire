@@ -1,0 +1,16 @@
+{
+  "category": "listeners"
+}
+---
+import { Listener } from '@lib/sapphire';
+
+export class DiscordListener extends Listener {
+  public constructor(context: Listener.Context, options: Listener.Options) {
+    super(context, {
+      ...options,
+      event: '{{name}}',
+    });
+  }
+
+  public override async run() {}
+}

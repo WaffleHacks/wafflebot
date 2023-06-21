@@ -1,0 +1,18 @@
+{
+  "category": "listeners"
+}
+---
+import nats from '@lib/nats';
+import { Listener } from '@lib/sapphire';
+
+export class NatsListener extends Listener {
+  public constructor(context: Listener.Context, options: Listener.Options) {
+    super(context, {
+      ...options,
+      emitter: nats,
+      event: '{{name}}',
+    });
+  }
+
+  public override async run() {}
+}
