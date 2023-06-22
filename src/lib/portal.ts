@@ -93,7 +93,7 @@ const request = async <T>(pathAndQuery: string): Promise<T> =>
     else return await response.json();
   });
 
-export const checkInParticipant = async (ids: number[]): Promise<void> =>
+export const checkInParticipant = async (ids: number | number[]): Promise<boolean> =>
   await withSpan('request', async (span) => {
     const url = `${APPLICATION_PORTAL_URL}/integrations/wafflebot/check-in`;
     span.setAttributes({ 'http.request.method': 'PUT', 'http.request.url': url });
@@ -104,8 +104,10 @@ export const checkInParticipant = async (ids: number[]): Promise<void> =>
     };
     propagation.inject(context.active(), headers);
 
-    const response = await fetch(url, { headers, body: JSON.stringify({ participants: ids }) });
+    const response = await fetch(url, { method: 'PUT', headers, body: JSON.stringify({ participant: ids }) });
     span.setAttribute('http.response.status', response.status);
 
-    if (response.status !== 200) throw new Error(`unexpected response: ${await response.text()} (${response.status})`);
+    if (response.status === 204) return true;
+    else if (response.status === 400) return false;
+    else throw new Error(`unexpected response: ${await response.text()} (${response.status})`);
   });
