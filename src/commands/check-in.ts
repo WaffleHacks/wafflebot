@@ -28,13 +28,23 @@ export class CheckInCommand extends Command {
     await withSpan('reply.defer', () => interaction.deferReply({ ephemeral: true }));
 
     const id = await Link.findParticipantId(interaction.user.id);
-    if (id === null) throw new Error(`assertion failed: no link found for user ${interaction.user.id}`);
+    if (id === null) {
+      return await withSpan('reply.edit', () =>
+        interaction.editReply({
+          embeds: [embeds.card(':x: Check-in failed', 'You must be verified before using this command.')],
+        }),
+      );
+    }
 
     const success = await checkInParticipant(id);
 
     let embed: EmbedBuilder;
-    if (success) embed = embeds.message(":white_check_mark: You're checked in!");
-    else embed = embeds.message(":x: Check in isn't open yet — check back after opening ceremony");
+    if (success) embed = embeds.card(":white_check_mark: You're checked in!");
+    else
+      embed = embeds.card(
+        ":x: Check in isn't open yet",
+        'Try again after opening ceremony. If you think this is an error, contact an organizer.',
+      );
 
     await withSpan('reply.edit', () => interaction.editReply({ embeds: [embed] }));
   }
