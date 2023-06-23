@@ -39,9 +39,9 @@ export class Event {
 
   /**
    * Delete an event mapping by an event's scheduled event ID
-   * @param discordId the scheduled event ID
+   * @param id the application portal ID
    */
-  public static async delete(discordId: string) {
-    await prisma.event.delete({ where: { discord_id: discordId } });
+  public static async delete(id: number) {
+    await prisma.event.delete({ where: { id } });
   }
 }

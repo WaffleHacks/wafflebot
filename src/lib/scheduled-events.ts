@@ -3,6 +3,7 @@ import { Client } from 'discord.js';
 
 import { GUILD_ID } from '@lib/config';
 import { Event } from '@lib/database';
+import notifier from '@lib/notifier';
 import { EventDetails } from '@lib/portal';
 
 /**
@@ -11,6 +12,8 @@ import { EventDetails } from '@lib/portal';
  * @param details the event details
  */
 export async function create(client: Client, details: EventDetails) {
+  notifier.upsert(details);
+
   const guild = await client.guilds.fetch(GUILD_ID);
   const created = await guild.scheduledEvents.create({
     name: details.name,
@@ -34,6 +37,8 @@ export async function create(client: Client, details: EventDetails) {
  * @param scheduledEventId the scheduled event id
  */
 export async function update(client: Client, details: EventDetails, scheduledEventId: string) {
+  notifier.upsert(details);
+
   const guild = await client.guilds.fetch(GUILD_ID);
 
   const eventOptions = {
@@ -59,14 +64,17 @@ export async function update(client: Client, details: EventDetails, scheduledEve
 /**
  * Delete a scheduled event
  * @param client the discord client
+ * @param eventId the application portal event ID
  * @param scheduledEventId the scheduled event id
  */
-export async function remove(client: Client, scheduledEventId: string) {
+export async function remove(client: Client, eventId: number, scheduledEventId: string) {
+  notifier.remove(eventId);
+
   try {
     const guild = await client.guilds.fetch(GUILD_ID);
     await guild.scheduledEvents.delete(scheduledEventId);
   } catch {}
 
   // Delete the mapping no matter what happens with Discord
-  await Event.delete(scheduledEventId);
+  await Event.delete(eventId);
 }

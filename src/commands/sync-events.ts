@@ -41,7 +41,8 @@ export class SyncEventsCommand extends Command {
       delete eventMappings[event.id.toString()];
     }
 
-    for (const id of Object.values(eventMappings)) await scheduledEvents.remove(client, id);
+    for (const [eventId, scheduledEventId] of Object.entries(eventMappings))
+      await scheduledEvents.remove(client, parseInt(eventId), scheduledEventId);
 
     await withSpan('reply.edit', () =>
       interaction.editReply({ embeds: [embeds.message('Successfully synced events from application portal')] }),

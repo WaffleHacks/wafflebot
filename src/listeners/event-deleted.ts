@@ -16,6 +16,6 @@ export class EventDeleted extends Listener {
     const discordId = await Event.find(data.event_id);
     if (discordId === null) return;
 
-    await scheduledEvents.remove(this.container.client, discordId);
+    await scheduledEvents.remove(this.container.client, data.event_id, discordId);
   }
 }

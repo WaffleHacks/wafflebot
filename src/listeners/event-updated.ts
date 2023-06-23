@@ -27,6 +27,6 @@ export class EventUpdated extends Listener {
 
     if (details !== null && discordId === null) await scheduledEvents.create(client, details);
     else if (details !== null && discordId !== null) await scheduledEvents.update(client, details, discordId);
-    else if (details === null && discordId !== null) await scheduledEvents.remove(client, discordId);
+    else if (details === null && discordId !== null) await scheduledEvents.remove(client, data.event_id, discordId);
   }
 }
