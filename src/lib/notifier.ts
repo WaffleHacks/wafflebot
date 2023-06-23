@@ -3,6 +3,7 @@ import { TextChannel } from 'discord.js';
 
 import { ANNOUNCEMENTS_CHANNEL_ID, GUILD_ID } from '@lib/config';
 import { Event } from '@lib/database';
+import logger, { Logger } from '@lib/logger';
 import { EventDetails, listEvents } from '@lib/portal';
 
 import client from '../client';
@@ -12,6 +13,7 @@ const STARTING_OFFSET = minutesToMilliseconds(1);
 class Notifier {
   // Mapping of event ID to timeout ID
   private readonly timeouts: Map<number, NodeJS.Timeout> = new Map();
+  private readonly logger: Logger = logger.child('notifier');
 
   /**
    * Seed and start the notifier
@@ -19,6 +21,7 @@ class Notifier {
   public async start() {
     const events = await listEvents();
 
+    this.logger.info('seeding events for notification');
     for (const event of events) this.upsert(event);
   }
 
@@ -38,6 +41,8 @@ class Notifier {
 
     const timeout = setTimeout(this.generateNotifier(details), msUntilStarting);
     this.timeouts.set(details.id, timeout);
+
+    this.logger.info('created/updated event notification', { id: details.id });
   }
 
   /**
@@ -47,6 +52,8 @@ class Notifier {
   public remove(id: number) {
     clearTimeout(this.timeouts.get(id));
     this.timeouts.delete(id);
+
+    this.logger.info('removed event notification', { id });
   }
 
   private generateNotifier(details: EventDetails): () => void {
