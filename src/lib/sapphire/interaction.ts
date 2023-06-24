@@ -19,9 +19,10 @@ export abstract class InteractionHandler<
   ): (interaction: Interaction, parsedData?: unknown) => unknown {
     return (interaction, parsedData) =>
       withSpan(
-        this.name,
+        'interaction.' + this.name,
         async (span) => {
           span.setAttributes({
+            'discord.route': 'interaction.' + this.name,
             'interaction.id': interaction.id,
             'interaction.type': formatInteractionType(interaction.type),
           });

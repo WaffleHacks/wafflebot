@@ -22,8 +22,11 @@ export class Command<PreParseRun = Args, O extends BaseCommand.Options = BaseCom
     fn: (message: Message, args: PreParseRun, context: MessageCommand.RunContext) => Awaitable<unknown>,
   ): (message: Message, args: PreParseRun, context: MessageCommand.RunContext) => Awaitable<unknown> {
     return (message, args, context) =>
-      withSpan(this.name, async (span) => {
-        span.setAttribute('message.id', message.id);
+      withSpan('command.' + this.name, async (span) => {
+        span.setAttributes({
+          'discord.route': 'command.' + this.name,
+          'message.id': message.id,
+        });
         setUserAttributes(span, message.author);
         setChannelAttributes(span, message.channel);
         setGuildAttributes(span, message.guild);
@@ -36,8 +39,9 @@ export class Command<PreParseRun = Args, O extends BaseCommand.Options = BaseCom
     fn: (interaction: T, context: ChatInputCommand.RunContext) => Awaitable<unknown>,
   ): (interaction: T, context: ChatInputCommand.RunContext) => Awaitable<unknown> {
     return (interaction, context) =>
-      withSpan(this.name, async (span) => {
+      withSpan('command.' + this.name, async (span) => {
         span.setAttributes({
+          'discord.route': 'command.' + this.name,
           'command.id': interaction.commandId,
           'command.name': interaction.commandName,
           'command.type': this.formatCommandType(interaction.commandType),

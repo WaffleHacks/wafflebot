@@ -17,8 +17,11 @@ export abstract class Listener<
     fn: (...args: E extends keyof ClientEvents ? ClientEvents[E] : unknown[]) => unknown,
   ): (...args: E extends keyof ClientEvents ? ClientEvents[E] : unknown[]) => unknown {
     return (...args) =>
-      withSpan(this.name, async (span) => {
-        span.setAttributes({ 'listener.event': this.event.toString() });
+      withSpan('listener.' + this.name, async (span) => {
+        span.setAttributes({
+          'discord.route': 'listener.' + this.name,
+          'listener.event': this.event.toString(),
+        });
         return await fn(...args);
       });
   }
