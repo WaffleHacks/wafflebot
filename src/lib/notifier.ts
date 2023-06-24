@@ -70,12 +70,14 @@ class Notifier {
       let content = `@everyone Join us for **${details.name}** now!\n${details.url}`;
 
       const event = await Event.find(details.id);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       if (event !== null) content += `\n\nhttps://discord.com/events/${GUILD_ID}/${event}`;
 
-      await channel.send({
-        content,
-        allowedMentions: { parse: ['everyone'] },
-      });
+      // Disable sending messages temporarily
+      // await channel.send({
+      //   content,
+      //   allowedMentions: { parse: ['everyone'] },
+      // });
     };
   }
 }
