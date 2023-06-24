@@ -68,10 +68,12 @@ export interface EventDetails {
   end: string;
 }
 
-export const findEvent = async (id: number): Promise<EventDetails | null> =>
+type FindEventBy = 'id' | 'code';
+
+export const findEvent = async (key: number | string, by: FindEventBy = 'id'): Promise<EventDetails | null> =>
   await withSpan('events.find', async (span): Promise<EventDetails | null> => {
-    span.setAttribute('event.id', id);
-    return await request(`events/${id}`);
+    span.setAttribute(`event.${by}`, key);
+    return await request(`events/${key}?by=${by}`);
   });
 
 export const listEvents = async (): Promise<EventDetails[]> =>
