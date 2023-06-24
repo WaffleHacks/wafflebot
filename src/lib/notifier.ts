@@ -19,9 +19,14 @@ class Notifier {
    * Seed and start the notifier
    */
   public async start() {
+    await this.refreshEvents();
+
+    setInterval(() => this.refreshEvents(), minutesToMilliseconds(30));
+  }
+  private async refreshEvents() {
     const events = await listEvents();
 
-    this.logger.info('seeding events for notification');
+    this.logger.info('refreshing events for notification');
     for (const event of events) this.upsert(event);
   }
 
